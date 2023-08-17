@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RegisterActivity"
+    >
+
+    <LinearLayout
+        android:id="@+id/registrationMainLL"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:orientation="vertical"
+        android:gravity="center_horizontal|center_vertical">
+
+        <TextView
+            android:id="@+id/registerHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/baseColor"
+            android:fontFamily="@font/nunitosans"
+            android:paddingTop="30dp"
+            android:paddingBottom="20dp"
+            android:text="Create New Account"
+            android:textColor="@color/black"
+            android:textSize="25dp"
+            android:textStyle="bold"
+            />
+
+        <!--Registration credential text fields-->
+    <!--    Login credentials Input fields   -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:boxCornerRadiusTopStart="25dp"
+        app:boxCornerRadiusTopEnd="25dp"
+        app:boxCornerRadiusBottomEnd="25dp"
+        app:boxCornerRadiusBottomStart="25dp">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/registrationUserName"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="@string/username"
+            android:layout_marginBottom="8dp"
+            android:drawableStart="@drawable/ic_user"
+            android:drawablePadding="8dp"
+            android:inputType="text"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:boxCornerRadiusTopStart="25dp"
+        app:boxCornerRadiusTopEnd="25dp"
+        app:boxCornerRadiusBottomEnd="25dp"
+        app:boxCornerRadiusBottomStart="25dp">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/registrationEmail"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="@string/email"
+            android:layout_marginBottom="10dp"
+            android:drawableStart="@drawable/ic_email"
+            android:drawablePadding="8dp"
+            android:inputType="textEmailAddress"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:boxCornerRadiusTopStart="25dp"
+        app:boxCornerRadiusTopEnd="25dp"
+        app:boxCornerRadiusBottomEnd="25dp"
+        app:boxCornerRadiusBottomStart="25dp">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/registrationPassword"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="@string/password"
+            android:drawableStart="@drawable/ic_password"
+            android:drawablePadding="8dp"
+            android:layout_marginBottom="10dp"
+            android:inputType="textPassword"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:boxCornerRadiusTopStart="25dp"
+        app:boxCornerRadiusTopEnd="25dp"
+        app:boxCornerRadiusBottomEnd="25dp"
+        app:boxCornerRadiusBottomStart="25dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/registrationCPassword"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="@string/confirm_password"
+            android:drawableStart="@drawable/ic_password"
+            android:drawablePadding="8dp"
+            android:inputType="textPassword"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+        <CheckBox
+            android:id="@+id/registrationCheckBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="I accept the terms and services."
+            android:gravity="center_vertical|center_horizontal"
+            android:textSize="16dp"
+            android:layout_marginTop="10dp"
+            android:checked="false"/>
+
+
+        <Button
+            android:id="@+id/registerbtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/primaryColor"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
+            android:text="REGISTER"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp">
+
+            <TextView
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Already have an account?"
+                android:textSize="16dp"/>
+
+            <TextView
+                android:id="@+id/registerlgntv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Login Now"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                android:paddingLeft="10dp"
+                android:textColor="@color/secondaryColor"/>
+
+        </LinearLayout>
+    </LinearLayout>
+    <!-- Dim background -->
+    <View
+        android:id="@+id/registrationiDimBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone" />
+
+    <!-- Centered progress bar -->
+    <ProgressBar
+        android:id="@+id/registrationProgressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+</RelativeLayout>

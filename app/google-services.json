@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "414408632509",
+    "project_id": "suitcase-5f00b",
+    "storage_bucket": "suitcase-5f00b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:414408632509:android:fa505e0563ab99e23a2fd4",
+        "android_client_info": {
+          "package_name": "com.pratikgurung.suitcase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "414408632509-iuh2n42dfm4odmkr92dphthi93hnnmmm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA93ERYX1kCZalGRY4vdiZyH0nUvuX2TQ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "414408632509-iuh2n42dfm4odmkr92dphthi93hnnmmm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

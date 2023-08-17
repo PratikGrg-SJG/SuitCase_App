@@ -1,0 +1,40 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme attributes here -->
+
+        <!-- Colors -->
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@android:color/transparent</item>
+        <item name="colorAccent">@color/greyAccent</item>
+
+        <!-- App Bar -->
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:windowNoTitle">true</item>
+
+        <!-- Status Bar -->
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <item name="toolbarStyle">@style/Widget.MyApp.Toolbar</item>
+    </style>
+
+    <style name="Widget.MyApp.Toolbar" parent="@style/Widget.AppCompat.Toolbar">
+        <!-- Customize Toolbar attributes -->
+        <item name="android:background">@color/primaryColor</item>
+        <item name="titleTextAppearance">@style/TextAppearance.MyApp.Toolbar.Title</item>
+        <!-- ... Other Toolbar attributes ... -->
+    </style>
+
+    <style name="TextAppearance.MyApp.Toolbar.Title" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <!-- Customize Toolbar title appearance -->
+        <item name="android:textColor">@color/greyAccent</item>
+        <item name="android:textSize">18sp</item>
+        <!-- ... Other title text attributes ... -->
+    </style>
+
+
+
+
+</resources>
+
