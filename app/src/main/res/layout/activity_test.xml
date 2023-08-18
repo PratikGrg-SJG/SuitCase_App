@@ -6,9 +6,23 @@
     android:layout_height="match_parent"
     tools:context=".TestActivity">
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        app:title="Test"
+        app:titleCentered="true"
+        android:background="@color/primaryColor"
+        app:titleTextAppearance="@style/ToolbarTitleTextAppearance"
+        app:titleTextColor="@color/white"
+        />
+
     <TextView
+        android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Test activity"/>
+        android:text="Test activity"
+        android:layout_centerInParent="true"
+        />
 
 </RelativeLayout>

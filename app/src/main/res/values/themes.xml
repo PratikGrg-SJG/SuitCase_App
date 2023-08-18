@@ -1,40 +1,27 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme attributes here -->
 
-        <!-- Colors -->
-        <item name="colorPrimary">@color/primaryColor</item>
-        <item name="colorPrimaryDark">@android:color/transparent</item>
-        <item name="colorAccent">@color/greyAccent</item>
-
-        <!-- App Bar -->
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:windowNoTitle">true</item>
-
+    <!--//for initial onboarding screens-->
+    <style name="OnboardTheme" parent="Theme.Material3.Light.NoActionBar">
         <!-- Status Bar -->
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor" >@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
-
-        <item name="toolbarStyle">@style/Widget.MyApp.Toolbar</item>
     </style>
 
-    <style name="Widget.MyApp.Toolbar" parent="@style/Widget.AppCompat.Toolbar">
-        <!-- Customize Toolbar attributes -->
-        <item name="android:background">@color/primaryColor</item>
-        <item name="titleTextAppearance">@style/TextAppearance.MyApp.Toolbar.Title</item>
-        <!-- ... Other Toolbar attributes ... -->
+    <!--//for majority of app screens with appbar-->
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Status Bar -->
+        <item name="android:statusBarColor" >@color/primaryColor</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!--primary color-->
+    <item name="colorPrimary">@color/primaryColor</item>
     </style>
 
-    <style name="TextAppearance.MyApp.Toolbar.Title" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
-        <!-- Customize Toolbar title appearance -->
-        <item name="android:textColor">@color/greyAccent</item>
-        <item name="android:textSize">18sp</item>
-        <!-- ... Other title text attributes ... -->
+    <!--for toolbar title text-->
+    <style name="ToolbarTitleTextAppearance" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">24sp</item>
+        <!--<item name="android:textColor">@color/white</item>-->
     </style>
-
-
 
 
 </resources>
-

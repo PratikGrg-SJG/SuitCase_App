@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "414408632509-iuh2n42dfm4odmkr92dphthi93hnnmmm.apps.googleusercontent.com",
+          "client_id": "414408632509-0h8agpegle8jv94rg938n01lclepdgca.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pratikgurung.suitcase",
+            "certificate_hash": "3a3e9129309d03308e59a179b21dce7d5e1e95e9"
+          }
+        },
+        {
+          "client_id": "414408632509-mmmpdkqiurlvkcpovbc6rhafjnfi4kmh.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

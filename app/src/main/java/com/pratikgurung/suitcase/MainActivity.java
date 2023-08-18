@@ -1,18 +1,27 @@
 package com.pratikgurung.suitcase;
 
-import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -22,46 +31,29 @@ public class MainActivity extends AppCompatActivity {
     FirebaseUser user;
     Button logoutbtn, next;
     TextView textView;
-
-    public static void setWindowFlag(Activity activity, final int bits, boolean on) {
-        Window win = activity.getWindow();
-        WindowManager.LayoutParams winParams = win.getAttributes();
-        if (on) {
-            winParams.flags |= bits;
-        } else {
-            winParams.flags &= ~bits;
-        }
-        win.setAttributes(winParams);
-    }
+    ImageView image;
+    MaterialToolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //making status bar transparent
-        if (Build.VERSION.SDK_INT >= 19 && Build.VERSION.SDK_INT < 21) {
-            setWindowFlag(this, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, true);
-        }
-        if (Build.VERSION.SDK_INT >= 19) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        }
 
-        if (Build.VERSION.SDK_INT >= 21) {
-            setWindowFlag(this, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, false);
-            getWindow().setStatusBarColor(Color.TRANSPARENT);
-        }
-        //making status bar icon dark color
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Set the status bar icon color to dark (light icons)
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
-
-        auth = FirebaseAuth.getInstance();
         logoutbtn = findViewById(R.id.logout);
         textView = findViewById(R.id.textViewMA);
         next = findViewById(R.id.nextbtn);
+        toolbar = findViewById(R.id.toolbar);
+        image = findViewById(R.id.iv_image);
+
+         //initializing firebase auth
+        auth = FirebaseAuth.getInstance();
+        //initialize firebase user
         user = auth.getCurrentUser();
+
+        //setting custom toolbar
+        setSupportActionBar(toolbar);
+
         //checking if user exist or not
         if(user ==  null){
             Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
@@ -69,19 +61,96 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
         else {
+            // When firebase user is not equal to null set image on image view
+            Glide.with(MainActivity.this).load(user.getPhotoUrl()).into(image);
+            // set name on text view
+            /*tvName.setText(firebaseUser.getDisplayName());*/
             textView.setText(user.getEmail());
         }
 
+        //initialize sign in client
+        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
+
         //singning out logged in user
-        logoutbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FirebaseAuth.getInstance().signOut();
-                //after signing out redirecting to login screen
-                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                startActivity(intent);
-                finish();
-            }
+        logoutbtn.setOnClickListener(view -> {
+            // Sign out from google
+            googleSignInClient.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    // Check condition
+                    if (task.isSuccessful()) {
+                        // When task is successful sign out from firebase
+                        showLogoutConfirmationDialog();
+                        // Display Toast
+                        Toast.makeText(getApplicationContext(), "Logout successful", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+
+            //moving to next activity making main activity parent
+            next.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getApplicationContext(), TestActivity.class);
+                    startActivity(intent);
+
+                }
+            });
         });
     }
+
+
+            //showing dialog box during signout to confirm or cancel
+            private void showLogoutConfirmationDialog () {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Log Out")
+                        .setMessage("Are you sure you want to log out?")
+                        .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                auth.signOut();
+                                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                AlertDialog dialog = builder.create();
+
+                // Applying custom rounded background drawable to the dialog's window
+                dialog.getWindow().setBackgroundDrawableResource(R.drawable.rounded_dialog_bg);
+
+                // Set a flag to prevent the dialog from getting cut off
+                dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+                dialog.show();
+
+                // Make the dialog visible and centered
+                dialog.getWindow().getDecorView().setSystemUiVisibility(
+                        this.getWindow().getDecorView().getSystemUiVisibility());
+                dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+
+                // Get dimension values for dialog box from resources
+                int dialogWidth = getResources().getDimensionPixelSize(R.dimen.dialog_width);
+                int dialogHeight = getResources().getDimensionPixelSize(R.dimen.dialog_height);
+
+                // Adjust the dialog box size (width and height)
+                WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+                params.width = dialogWidth;
+                params.height = dialogHeight;
+                dialog.getWindow().setAttributes(params);
+
+                //changing text color of confirm to be red
+                Button confirmButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                confirmButton.setTextColor(ContextCompat.getColor(this, R.color.secondaryColor));
+
+            }
 }
+
+
