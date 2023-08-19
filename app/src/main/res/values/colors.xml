@@ -10,7 +10,9 @@
 
     <color name="secondaryColor">#DB5252</color>
 
-    <color name="optionalColor">#37A9DB</color>
+   <!-- <color name="optionalColor">#37A9DB</color>-->
+    <color name="optionalColor">#2D2E4A</color>
+
 
 
 

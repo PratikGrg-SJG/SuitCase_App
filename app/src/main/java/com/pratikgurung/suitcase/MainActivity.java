@@ -8,6 +8,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -30,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     FirebaseAuth auth;
     FirebaseUser user;
     Button logoutbtn, next;
-    TextView textView;
+    TextView textView1, textView2;
     ImageView image;
     MaterialToolbar toolbar;
 
@@ -41,8 +43,9 @@ public class MainActivity extends AppCompatActivity {
 
 
         logoutbtn = findViewById(R.id.logout);
-        textView = findViewById(R.id.textViewMA);
-        next = findViewById(R.id.nextbtn);
+        textView1 = findViewById(R.id.textViewMA);
+        textView2 = findViewById(R.id.textViewDN);
+        next = findViewById(R.id.nextPageBtn);
         toolbar = findViewById(R.id.toolbar);
         image = findViewById(R.id.iv_image);
 
@@ -61,11 +64,12 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
         else {
+
             // When firebase user is not equal to null set image on image view
             Glide.with(MainActivity.this).load(user.getPhotoUrl()).into(image);
             // set name on text view
-            /*tvName.setText(firebaseUser.getDisplayName());*/
-            textView.setText(user.getEmail());
+            textView2.setText(user.getDisplayName());
+            textView1.setText(user.getEmail());
         }
 
         //initialize sign in client
@@ -81,23 +85,45 @@ public class MainActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         // When task is successful sign out from firebase
                         showLogoutConfirmationDialog();
-                        // Display Toast
-                        Toast.makeText(getApplicationContext(), "Logout successful", Toast.LENGTH_SHORT).show();
+
                     }
                 }
             });
-
-
-            //moving to next activity making main activity parent
-            next.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(getApplicationContext(), TestActivity.class);
-                    startActivity(intent);
-
-                }
-            });
         });
+        //moving to next activity making main activity parent
+        next.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), TestActivity.class);
+                startActivity(intent);
+
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_items, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.navigation_home) {
+            // Handle Settings option click
+            return true;
+        } else if (id == R.id.navigation_dashboard) {
+            // Handle About option click
+            return true;
+        } else if (id == R.id.navigation_dashboard) {
+            // Handle Exit option click
+            // Implement your exit logic here
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 
@@ -110,6 +136,8 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 auth.signOut();
+                                // Display Toast
+                                Toast.makeText(getApplicationContext(), "Successfully Logged Out", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                                 startActivity(intent);
                                 finish();

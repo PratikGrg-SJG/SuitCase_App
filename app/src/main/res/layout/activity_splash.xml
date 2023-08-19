@@ -18,8 +18,6 @@
         android:layout_below="@+id/splashLogo"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:text="Pack Your Picks"
-        android:textColor="@color/black"
         android:layout_centerHorizontal="true"
         android:textSize="25dp"
         android:layout_marginTop="10dp"

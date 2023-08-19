@@ -10,11 +10,13 @@
     <!--//for majority of app screens with appbar-->
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Status Bar -->
-        <item name="android:statusBarColor" >@color/primaryColor</item>
+        <item name="android:statusBarColor" >@color/optionalColor</item>
         <item name="android:windowLightStatusBar">false</item>
 
+        <item name="colorControlNormal">@color/white</item>
+
         <!--primary color-->
-    <item name="colorPrimary">@color/primaryColor</item>
+    <item name="colorPrimary">@color/optionalColor</item>
     </style>
 
     <!--for toolbar title text-->
@@ -22,6 +24,13 @@
         <item name="android:textSize">24sp</item>
         <!--<item name="android:textColor">@color/white</item>-->
     </style>
+
+    <!--password reset dialog -->
+    <style name="CustomDialogStyle" parent="ThemeOverlay.MaterialComponents.Dialog">
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
 
 
 </resources>

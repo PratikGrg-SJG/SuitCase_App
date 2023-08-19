@@ -9,9 +9,12 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -38,7 +41,7 @@ public class LoginActivity extends AppCompatActivity {
 
     TextInputEditText emailText, passwordText;
     Button loginButton;
-    TextView registerNowTextBtn;
+    TextView registerNowTextBtn, forgottenPasswordBtn;
     LinearLayout googleSignInbtn;
     ProgressBar progressBar;
     View dimBackground;
@@ -66,6 +69,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordText = findViewById(R.id.loginPassword);
         loginButton = findViewById(R.id.loginbtn);
         registerNowTextBtn = findViewById(R.id.loginRNtv);
+        forgottenPasswordBtn = findViewById(R.id.forgotPassword);
         googleSignInbtn = findViewById(R.id.googleSignInbtn);
         progressBar = findViewById(R.id.loginProgressBar);
         dimBackground = findViewById(R.id.loginDimBackground);
@@ -73,7 +77,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
-
+        //login part
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -116,6 +120,8 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         });
             }
+
+
         });
 
         /*for google signin*/
@@ -152,7 +158,18 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         });
+
+        forgottenPasswordBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showForgotPasswordDialog();
+            }
+        });
+
+
     }
+
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -183,7 +200,7 @@ public class LoginActivity extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     // When task is successful redirect to profile activity display Toast
                                     startActivity(new Intent(getApplicationContext(), MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-                                    displayToast("Firebase authentication successful");
+                                    /*displayToast("Firebase authentication successful");*/
                                 } else {
                                     // When task is unsuccessful display Toast
                                     displayToast("Authentication Failed :" + task.getException().getMessage());
@@ -201,4 +218,45 @@ public class LoginActivity extends AppCompatActivity {
     private void displayToast(String s) {
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
     }
+
+    private void showForgotPasswordDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Reset Password");
+
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_forgotten_password, null);
+        builder.setView(view);
+
+        TextInputEditText emailEditText = view.findViewById(R.id.forgotPasswordEmail);
+        Button resetButton = view.findViewById(R.id.resetPasswordButton);
+
+        AlertDialog dialog = builder.create();
+
+        resetButton.setOnClickListener(v -> {
+            String email = emailEditText.getText().toString().trim();
+
+            if (TextUtils.isEmpty(email)) {
+                emailEditText.setError("Enter your email");
+                return;
+            }
+
+            progressBar.setVisibility(View.VISIBLE);
+            dimBackground.setVisibility(View.VISIBLE);
+
+            mAuth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener(task -> {
+                        progressBar.setVisibility(View.GONE);
+                        dimBackground.setVisibility(View.GONE);
+
+                        if (task.isSuccessful()) {
+                            Toast.makeText(this, "Password reset email sent", Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                        } else {
+                            Toast.makeText(this, "Failed to send reset email", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
+
+        dialog.show();
+    }
+
 }

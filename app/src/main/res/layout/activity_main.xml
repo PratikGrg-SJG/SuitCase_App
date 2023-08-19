@@ -14,10 +14,46 @@
         android:layout_height="56dp"
         app:title="SuitCase"
         app:titleCentered="true"
-        android:background="@color/primaryColor"
+        android:background="@color/optionalColor"
         app:titleTextAppearance="@style/ToolbarTitleTextAppearance"
         app:titleTextColor="@color/white"
         />
+
+    <!-- Container for the top navigation bar -->
+    <LinearLayout
+        android:id="@+id/topNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_below="@id/toolbar"
+        android:orientation="horizontal"
+        android:background="@color/optionalColor">
+
+    <!-- "Trips" section -->
+    <TextView
+        android:id="@+id/tripsTab"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="Trips"
+        android:textSize="18dp"
+        android:textColor="@color/white" />
+
+        <!-- "Travel Essentials" section -->
+        <TextView
+            android:id="@+id/travelEssentialsTab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Travel Essentials"
+            android:textSize="18dp"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,6 +74,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Hello World!" />
+        <TextView
+            android:id="@+id/textViewDN"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hello World!" />
 
         <Button
             android:id="@+id/logout"
@@ -46,7 +87,7 @@
             android:text="@string/logout" />
 
         <Button
-            android:id="@+id/nextbtn"
+            android:id="@+id/nextPageBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Go to test screen" />
