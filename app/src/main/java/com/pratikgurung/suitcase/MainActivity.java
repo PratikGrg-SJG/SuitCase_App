@@ -8,12 +8,14 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +26,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -31,10 +35,10 @@ public class MainActivity extends AppCompatActivity {
 
     FirebaseAuth auth;
     FirebaseUser user;
-    Button logoutbtn, next;
-    TextView textView1, textView2;
-    ImageView image;
+    GoogleSignInClient googleSignInClient;
     MaterialToolbar toolbar;
+    FloatingActionButton fabAddDestination;
+    BottomSheetDialog bottomSheetDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,17 +46,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        logoutbtn = findViewById(R.id.logout);
-        textView1 = findViewById(R.id.textViewMA);
-        textView2 = findViewById(R.id.textViewDN);
-        next = findViewById(R.id.nextPageBtn);
         toolbar = findViewById(R.id.toolbar);
-        image = findViewById(R.id.iv_image);
+        fabAddDestination = findViewById(R.id.fab_add_destination);
+
 
          //initializing firebase auth
         auth = FirebaseAuth.getInstance();
         //initialize firebase user
         user = auth.getCurrentUser();
+        googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
 
         //setting custom toolbar
         setSupportActionBar(toolbar);
@@ -63,42 +65,18 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         }
-        else {
 
-            // When firebase user is not equal to null set image on image view
-            Glide.with(MainActivity.this).load(user.getPhotoUrl()).into(image);
-            // set name on text view
-            textView2.setText(user.getDisplayName());
-            textView1.setText(user.getEmail());
-        }
-
-        //initialize sign in client
-        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
-
-        //singning out logged in user
-        logoutbtn.setOnClickListener(view -> {
-            // Sign out from google
-            googleSignInClient.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    // Check condition
-                    if (task.isSuccessful()) {
-                        // When task is successful sign out from firebase
-                        showLogoutConfirmationDialog();
-
-                    }
-                }
-            });
-        });
-        //moving to next activity making main activity parent
-        next.setOnClickListener(new View.OnClickListener() {
+        //adding new destination using floating action button
+        fabAddDestination.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), TestActivity.class);
-                startActivity(intent);
-
+                bottomSheetDialog = new BottomSheetDialog(MainActivity.this, R.style.BottomSheetStyle);
+                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.bottom_sheet_dialog,(LinearLayout)findViewById(R.id.bottomSheet));
+                bottomSheetDialog.setContentView(view);
+                bottomSheetDialog.show();
             }
         });
+
     }
 
     @Override
@@ -117,9 +95,12 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.navigation_dashboard) {
             // Handle About option click
             return true;
-        } else if (id == R.id.navigation_dashboard) {
+        } else if (id == R.id.navigation_notifications) {
             // Handle Exit option click
             // Implement your exit logic here
+            return true;
+        } else if (id == R.id.navigation_logout) {
+            showLogoutConfirmationDialog();
             return true;
         }
 

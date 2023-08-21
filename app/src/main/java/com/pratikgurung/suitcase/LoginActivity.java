@@ -134,10 +134,19 @@ public class LoginActivity extends AppCompatActivity {
         googleSignInbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //initialize signin intent
-                Intent intent = googleSignInClient.getSignInIntent();
-                //start activity for result
-                startActivityForResult(intent, 100);
+                // Sign out of Google first (clear cached credentials)
+                googleSignInClient.signOut().addOnCompleteListener(LoginActivity.this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Sign-out successful, now start the Google Sign-In intent
+                            Intent intent = googleSignInClient.getSignInIntent();
+                            startActivityForResult(intent, 100);
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Google signin failed", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
             }
         });
 

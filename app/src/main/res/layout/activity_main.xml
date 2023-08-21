@@ -19,78 +19,18 @@
         app:titleTextColor="@color/white"
         />
 
-    <!-- Container for the top navigation bar -->
-    <LinearLayout
-        android:id="@+id/topNavBar"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_below="@id/toolbar"
-        android:orientation="horizontal"
-        android:background="@color/optionalColor">
-
-    <!-- "Trips" section -->
-    <TextView
-        android:id="@+id/tripsTab"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:text="Trips"
-        android:textSize="18dp"
-        android:textColor="@color/white" />
-
-        <!-- "Travel Essentials" section -->
-        <TextView
-            android:id="@+id/travelEssentialsTab"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Travel Essentials"
-            android:textSize="18dp"
-            android:textColor="@color/white" />
-
-    </LinearLayout>
-
-
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_destination"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom|end"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="@color/optionalColor"
+        app:srcCompat="@drawable/ic_add" />
 
-        <!-- Your other UI elements here -->
-
-        <ImageView
-            android:id="@+id/iv_image"
-            android:layout_width="150dp"
-            android:layout_height="150dp" />
-
-        <TextView
-            android:id="@+id/textViewMA"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Hello World!" />
-        <TextView
-            android:id="@+id/textViewDN"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Hello World!" />
-
-        <Button
-            android:id="@+id/logout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/logout" />
-
-        <Button
-            android:id="@+id/nextPageBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Go to test screen" />
-
-    </LinearLayout>
 </RelativeLayout>
