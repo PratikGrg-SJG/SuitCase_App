@@ -12,9 +12,9 @@
         android:layout_height="56dp"
         app:title="Test"
         app:titleCentered="true"
-        android:background="@color/optionalColor"
+
         app:titleTextAppearance="@style/ToolbarTitleTextAppearance"
-        app:titleTextColor="@color/white"
+
         />
 
     <TextView

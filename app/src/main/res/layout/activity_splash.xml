@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SplashActivity"
-    android:background="@color/white">
+    >
 
     <ImageView android:id="@+id/splashLogo"
         android:layout_height="150dp"
@@ -26,3 +26,5 @@
         />
 
 </RelativeLayout>
+
+<!--top ma background thyo-->

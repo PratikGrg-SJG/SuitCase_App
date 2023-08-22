@@ -29,7 +29,7 @@ public class TestActivity extends AppCompatActivity {
 
         // Change the color of the navigation icon
         Drawable navIcon = toolbar.getNavigationIcon();
-        navIcon.setColorFilter(ContextCompat.getColor(this, R.color.white), PorterDuff.Mode.SRC_IN);
+        navIcon.setColorFilter(ContextCompat.getColor(this, R.color.md_theme_light_onPrimary), PorterDuff.Mode.SRC_IN);
 
         // Increase the size of the navigation icon
         int iconSize = getResources().getDimensionPixelSize(R.dimen.custom_icon_size);

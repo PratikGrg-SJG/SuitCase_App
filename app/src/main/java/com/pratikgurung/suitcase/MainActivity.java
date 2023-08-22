@@ -1,19 +1,27 @@
 package com.pratikgurung.suitcase;
 
 
+import static com.google.android.material.internal.ViewUtils.hideKeyboard;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -49,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         fabAddDestination = findViewById(R.id.fab_add_destination);
 
-
          //initializing firebase auth
         auth = FirebaseAuth.getInstance();
         //initialize firebase user
@@ -68,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
         //adding new destination using floating action button
         fabAddDestination.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 bottomSheetDialog = new BottomSheetDialog(MainActivity.this, R.style.BottomSheetStyle);
@@ -78,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -157,9 +166,10 @@ public class MainActivity extends AppCompatActivity {
 
                 //changing text color of confirm to be red
                 Button confirmButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                confirmButton.setTextColor(ContextCompat.getColor(this, R.color.secondaryColor));
+                confirmButton.setTextColor(ContextCompat.getColor(this, R.color.md_theme_light_error));
 
             }
+
 }
 
 

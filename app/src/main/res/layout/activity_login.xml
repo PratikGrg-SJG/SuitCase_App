@@ -21,18 +21,18 @@
             android:layout_width="300dp"
             android:layout_height="200dp"
             android:layout_marginTop="-50dp"
-            app:srcCompat="@drawable/logo2" />
+            app:srcCompat="@drawable/mainlogo" />
 
         <TextView
             android:id="@+id/loginHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/baseColor"
+
             android:fontFamily="@font/nunitosans"
             android:paddingTop="20dp"
             android:paddingBottom="20dp"
             android:text="@string/welcome_back"
-            android:textColor="@color/black"
+
             android:textSize="25sp"
             android:textStyle="bold" />
 
@@ -105,7 +105,6 @@
             android:layout_below="@+id/loginPasswordET"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"
-            android:backgroundTint="@color/primaryColor"
             android:paddingTop="15dp"
             android:paddingBottom="15dp"
             android:text="@string/login"
@@ -132,9 +131,10 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Register Now"
+                android:textColor="@color/md_theme_light_secondary"
                 android:textSize="16sp"
                 android:paddingLeft="10dp"
-                android:textColor="@color/secondaryColor"/>
+                />
 
         </LinearLayout>
 
@@ -149,7 +149,7 @@
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1"
-                android:background="@color/greyAccent"/>
+                android:background="@color/md_theme_light_primaryContainer"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -157,15 +157,13 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:text="@string/or"
-                android:textColor="@color/black"
-
                 android:textSize="16sp" />
 
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1"
-                android:background="@color/greyAccent"/>
+                android:background="@color/md_theme_light_primaryContainer"/>
 
         </LinearLayout>
 

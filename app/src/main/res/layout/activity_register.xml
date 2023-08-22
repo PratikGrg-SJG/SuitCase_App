@@ -20,12 +20,12 @@
             android:id="@+id/registerHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/baseColor"
+
             android:fontFamily="@font/nunitosans"
             android:paddingTop="30dp"
             android:paddingBottom="20dp"
             android:text="Create New Account"
-            android:textColor="@color/black"
+
             android:textSize="25dp"
             android:textStyle="bold"
             />
@@ -125,7 +125,7 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
-            android:backgroundTint="@color/primaryColor"
+
             android:paddingTop="15dp"
             android:paddingBottom="15dp"
             android:text="REGISTER"
@@ -153,7 +153,8 @@
                 android:text="Login Now"
                 android:textSize="16dp"
                 android:paddingLeft="10dp"
-                android:textColor="@color/secondaryColor"/>
+                android:textColor="@color/md_theme_light_secondary"
+               />
 
         </LinearLayout>
     </LinearLayout>

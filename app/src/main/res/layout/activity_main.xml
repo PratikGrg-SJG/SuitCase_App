@@ -8,15 +8,32 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="80dp"
+        android:src="@drawable/emptyimage" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imageView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="-67dp"
+        android:text="Your travel list is empty"
+        android:textSize="18sp"/>
+
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         app:title="SuitCase"
         app:titleCentered="true"
-        android:background="@color/optionalColor"
+        android:background="@color/md_theme_light_primary"
         app:titleTextAppearance="@style/ToolbarTitleTextAppearance"
-        app:titleTextColor="@color/white"
+
         />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -30,7 +47,8 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
-        android:backgroundTint="@color/optionalColor"
-        app:srcCompat="@drawable/ic_add" />
+        android:src="@drawable/ic_addnew"
+
+        />
 
 </RelativeLayout>
