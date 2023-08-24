@@ -2,20 +2,20 @@ package com.pratikgurung.suitcase;
 
 
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -229,16 +229,17 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void showForgotPasswordDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Reset Password");
-
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_forgotten_password, null);
-        builder.setView(view);
-
-        TextInputEditText emailEditText = view.findViewById(R.id.forgotPasswordEmail);
-        Button resetButton = view.findViewById(R.id.resetPasswordButton);
-
+        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_forgotten_password, null);
+        builder.setView(dialogView);
         AlertDialog dialog = builder.create();
+
+        // Set a transparent background for the dialog
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+        TextInputEditText emailEditText = dialogView.findViewById(R.id.forgotPasswordEmail);
+        Button resetButton = dialogView.findViewById(R.id.resetPasswordButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
 
         resetButton.setOnClickListener(v -> {
             String email = emailEditText.getText().toString().trim();
@@ -264,8 +265,14 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     });
         });
+        cancelButton.setOnClickListener(v -> {
+            dialog.dismiss();
+        });
+
+
 
         dialog.show();
+
     }
 
 }

@@ -13,7 +13,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="80dp"
-        android:src="@drawable/emptyimage" />
+        android:src="@drawable/emptyimage"
+        android:visibility="gone"/>
+
+    <!-- Add a RecyclerView to display data -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:visibility="visible" />
 
     <TextView
         android:id="@+id/textView"
@@ -23,7 +32,8 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="-67dp"
         android:text="Your travel list is empty"
-        android:textSize="18sp"/>
+        android:textSize="18sp"
+        android:visibility="gone"/>
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"

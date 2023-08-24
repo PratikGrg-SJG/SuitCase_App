@@ -6,6 +6,9 @@ import static com.google.android.material.internal.ViewUtils.hideKeyboard;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
@@ -32,12 +35,34 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
+
+import org.w3c.dom.Text;
+
+import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import models.DestinationModel;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,9 +81,18 @@ public class MainActivity extends AppCompatActivity {
 
         toolbar = findViewById(R.id.toolbar);
         fabAddDestination = findViewById(R.id.fab_add_destination);
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        ImageView imageView = findViewById(R.id.imageView);
+        TextView textView = findViewById(R.id.textView);
 
          //initializing firebase auth
         auth = FirebaseAuth.getInstance();
+        //initializing firestore
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        //referencing to collection
+        CollectionReference destinationCollection = db.collection("Travel Destination");
+
+
         //initialize firebase user
         user = auth.getCurrentUser();
         googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
@@ -73,15 +107,99 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
+        //checking if the collection is empty or not
+        destinationCollection.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    QuerySnapshot querySnapshot = task.getResult();
+                }
+            }
+        });
+
+
+
+
         //adding new destination using floating action button
         fabAddDestination.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                bottomSheetDialog = new BottomSheetDialog(MainActivity.this, R.style.BottomSheetStyle);
-                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.bottom_sheet_dialog,(LinearLayout)findViewById(R.id.bottomSheet));
+                bottomSheetDialog = new BottomSheetDialog(MainActivity.this);
+                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.bottom_sheet_dialog, (LinearLayout) findViewById(R.id.bottomSheet));
                 bottomSheetDialog.setContentView(view);
                 bottomSheetDialog.show();
+
+                // Declare TextInputEditText fields
+                TextInputEditText inputDesName = view.findViewById(R.id.destinationName);
+                TextInputEditText inputDescrip = view.findViewById(R.id.description);
+                ImageView datePickerButton = view.findViewById(R.id.datePicker);
+                TextView datePickerView = view.findViewById(R.id.dptextView);
+
+                datePickerButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        MaterialDatePicker<Long> materialDatePicker = MaterialDatePicker.Builder.datePicker().setTitleText("Select Date").setSelection(MaterialDatePicker.todayInUtcMilliseconds()).build();
+                        materialDatePicker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Long>() {
+                            @Override
+                            public void onPositiveButtonClick(Long selection) {
+                                String date = new SimpleDateFormat("E, dd MMM, yyyy", Locale.getDefault()).format(new Date(selection));
+                                datePickerView.setText(MessageFormat.format("{0}", date));
+                            }
+                        });
+                        materialDatePicker.show(getSupportFragmentManager(), "tag");
+                    }
+                });
+
+                // Add an OnTouchListener to the parent view of the dialog
+                view.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        // Hide the keyboard
+                        hideKeyboard(MainActivity.this, view);
+                        // Clear focus from TextInputEditText fields
+                        inputDesName.clearFocus();
+                        inputDescrip.clearFocus();
+                        return false;
+                    }
+                });
+
+                // Declare button to save data
+                Button saveButton = view.findViewById(R.id.save_destination_btn);
+
+                saveButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // Get user input
+                        String destinationName = inputDesName.getText().toString();
+                        String description = inputDescrip.getText().toString();
+                        String selectedDate = datePickerView.getText().toString();
+
+                        // Create a new destination document
+                        Map<String, Object> destinationData = new HashMap<>();
+                        destinationData.put("Destination Name", destinationName);
+                        destinationData.put("Description", description);
+                        destinationData.put("Selected Date", selectedDate);
+
+                        db.collection("Travel Destination")
+                                .add(destinationData)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        // Document added successfully
+                                        Toast.makeText(MainActivity.this, "Destination added!", Toast.LENGTH_SHORT).show();
+                                        bottomSheetDialog.dismiss(); // Close the bottom sheet
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Handle failure
+                                        Toast.makeText(MainActivity.this, "Failed to add destination: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }
+                });
             }
         });
 
@@ -169,6 +287,14 @@ public class MainActivity extends AppCompatActivity {
                 confirmButton.setTextColor(ContextCompat.getColor(this, R.color.md_theme_light_error));
 
             }
+
+            //defining method to unfocus on the bottom sheet
+            public static void hideKeyboard(Activity activity, View view) {
+                InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
+    }
 
 }
 

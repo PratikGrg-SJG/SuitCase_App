@@ -10,7 +10,7 @@
     <ImageView android:id="@+id/splashLogo"
         android:layout_height="150dp"
         android:layout_width="wrap_content"
-        android:src="@drawable/logo2"
+        android:src="@drawable/mainlogo"
         android:layout_centerInParent="true"/>
 
     <TextView
