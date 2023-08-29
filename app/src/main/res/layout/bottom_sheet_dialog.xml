@@ -61,10 +61,10 @@
         app:boxStrokeColor="@color/md_theme_light_primaryContainer">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/description"
+            android:id="@+id/note"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter Description"
+            android:hint="Add Notes"
             android:minLines="4"
             android:maxLines="4"
             android:gravity="top|start"

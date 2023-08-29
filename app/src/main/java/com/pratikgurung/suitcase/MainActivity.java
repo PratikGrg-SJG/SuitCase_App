@@ -1,21 +1,23 @@
 package com.pratikgurung.suitcase;
 
 
+import static android.content.ContentValues.TAG;
 import static com.google.android.material.internal.ViewUtils.hideKeyboard;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.icu.util.Calendar;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,13 +26,11 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -40,7 +40,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -49,16 +48,18 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-
-import org.w3c.dom.Text;
 
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -81,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
 
         toolbar = findViewById(R.id.toolbar);
         fabAddDestination = findViewById(R.id.fab_add_destination);
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
         ImageView imageView = findViewById(R.id.imageView);
         TextView textView = findViewById(R.id.textView);
 
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Declare TextInputEditText fields
                 TextInputEditText inputDesName = view.findViewById(R.id.destinationName);
-                TextInputEditText inputDescrip = view.findViewById(R.id.description);
+                TextInputEditText inputNote = view.findViewById(R.id.note);
                 ImageView datePickerButton = view.findViewById(R.id.datePicker);
                 TextView datePickerView = view.findViewById(R.id.dptextView);
 
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
                         hideKeyboard(MainActivity.this, view);
                         // Clear focus from TextInputEditText fields
                         inputDesName.clearFocus();
-                        inputDescrip.clearFocus();
+                        inputNote.clearFocus();
                         return false;
                     }
                 });
@@ -172,14 +172,14 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         // Get user input
                         String destinationName = inputDesName.getText().toString();
-                        String description = inputDescrip.getText().toString();
+                        String note = inputNote.getText().toString();
                         String selectedDate = datePickerView.getText().toString();
 
                         // Create a new destination document
                         Map<String, Object> destinationData = new HashMap<>();
-                        destinationData.put("Destination Name", destinationName);
-                        destinationData.put("Description", description);
-                        destinationData.put("Selected Date", selectedDate);
+                        destinationData.put("destinationName", destinationName);
+                        destinationData.put("notes", note);
+                        destinationData.put("selectedDate", selectedDate);
 
                         db.collection("Travel Destination")
                                 .add(destinationData)
@@ -202,6 +202,33 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+
+        //for fectching data from firebase
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        DestinationAdaptor adapter = new DestinationAdaptor(new ArrayList<>());
+        recyclerView.setAdapter(adapter);
+
+        // Set up a Firestore real-time listener to update data in real-time
+        destinationCollection.addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.w(TAG, "Listen failed.", e);
+                    return;
+                }
+
+                List<DestinationModel> destinations = new ArrayList<>();
+                for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                    DestinationModel destination = document.toObject(DestinationModel.class);
+                    destinations.add(destination);
+                    Log.d("Firestore", "Fetched: " + destination.getDestinationName());
+                }
+                adapter.setData(destinations); // Update the RecyclerView
+            }
+        });
+
 
     }
 

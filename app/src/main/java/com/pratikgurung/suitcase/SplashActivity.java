@@ -60,7 +60,7 @@ public class SplashActivity extends AppCompatActivity {
             String text = "Pack Your Picks";
             Spannable spannable = new SpannableString(text);
             spannable.setSpan(new ForegroundColorSpan(Color.parseColor("#FF5722")), 0, 4, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Color for "Pack"
-            spannable.setSpan(new ForegroundColorSpan(Color.parseColor("#03A9F4")), 5, 9, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Color for "Your"
+            spannable.setSpan(new ForegroundColorSpan(Color.parseColor("#00576F")), 5, 9, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Color for "Your"
             spannable.setSpan(new ForegroundColorSpan(Color.parseColor("#FF5722")), 10, 15, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Color for "Picks"
             spannable.setSpan(new RelativeSizeSpan(1.2f), 5, 9, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); // Slightly larger size for "Your"
 
