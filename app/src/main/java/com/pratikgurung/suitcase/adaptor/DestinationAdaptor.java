@@ -50,6 +50,8 @@ public class DestinationAdaptor extends RecyclerView.Adapter<DestinationAdaptor.
         holder.selectedDateTextView.setText(destination.getSelectedDate());
     }
 
+
+
     @Override
     public int getItemCount() {
         return destinations.size();
