@@ -1,7 +1,9 @@
 package com.pratikgurung.suitcase.models;
 
+import java.util.Comparator;
+
 public class ItemModel {
-    private String itemName, itemDescription, itemPrice, itemImage, destinationDocumentId;
+    private String itemName, itemDescription, itemPrice, itemImage, destinationDocumentId, itemDocumentId;
     private boolean purchased;
 
     public ItemModel() {
@@ -15,6 +17,7 @@ public class ItemModel {
         this.itemImage = itemImage;
         this.destinationDocumentId = destinationDocumentId;
     }
+
 
     public String getItemName() {
         return itemName;
@@ -56,6 +59,14 @@ public class ItemModel {
         this.destinationDocumentId = destinationDocumentId;
     }
 
+    public String getItemDocumentId() {
+        return itemDocumentId;
+    }
+
+    public void setItemDocumentId(String itemDocumentId) {
+        this.itemDocumentId = itemDocumentId;
+    }
+
     public boolean isPurchased() {
         return purchased;
     }
@@ -63,4 +74,7 @@ public class ItemModel {
     public void setPurchased(boolean purchased) {
         this.purchased = purchased;
     }
+
+
+
 }

@@ -1,9 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".ItemDetailsActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarItemsDetail"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        app:title="Destination Name"
+        app:titleCentered="true"
+        android:background="@color/md_theme_light_primary"
+        app:titleTextAppearance="@style/ToolbarTitleTextAppearance"
+        />
+
+    <ImageView
+        android:id="@+id/imageViewItemDetail"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/placeholder_image" />
+
+
+    <TextView
+        android:id="@+id/textViewItemDetailName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Item Name"
+        android:textSize="20sp"
+        android:paddingTop="16dp" />
+
+    <TextView
+        android:id="@+id/textViewItemDetailPrice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Item Price"
+        android:textSize="18sp"
+        android:paddingTop="8dp" />
+
+    <TextView
+        android:id="@+id/textViewItemDetailDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Item Description"
+        android:textSize="18sp"
+        android:paddingTop="8dp" />
+
+</LinearLayout>

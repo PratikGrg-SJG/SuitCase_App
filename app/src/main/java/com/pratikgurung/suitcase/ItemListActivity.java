@@ -41,7 +41,7 @@ import com.pratikgurung.suitcase.models.ItemModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ItemListActivity extends AppCompatActivity {
+public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.OnItemClickListener {
 
     MaterialToolbar toolbar;
     RecyclerView recyclerView;
@@ -56,6 +56,9 @@ public class ItemListActivity extends AppCompatActivity {
     private List<ItemModel> itemList;
     private AlertDialog progressDialog;
     private ImageView image;
+   /* FirebaseFirestore db = FirebaseFirestore.getInstance();
+    CollectionReference itemReference = db.collection("items");*/
+
 
 
     @Override
@@ -104,15 +107,18 @@ public class ItemListActivity extends AppCompatActivity {
 
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        itemAdapter = new ItemAdaptor(itemList);
+        itemAdapter = new ItemAdaptor(itemList, this, (ItemAdaptor.OnItemClickListener) this);
         recyclerView.setAdapter(itemAdapter);
     }
+
 
     // Method to add an item to the itemList and update the RecyclerView
     private void addItemToItemList(ItemModel item) {
         itemList.add(item);
         itemAdapter.notifyDataSetChanged();  // Notify the adapter that the data has changed
     }
+
+
 
     private void showItemInputDialog(String destinationDocumentId) {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.item_input, null);
@@ -213,8 +219,9 @@ public class ItemListActivity extends AppCompatActivity {
 
     // Save item details to Firebase Firestore
     private void saveItemToFirestore(String itemName, String itemPrice, String itemDescription, String imageURL, String destinationDocumentId) {
+
         // Create a new ItemModel object with the item details including destinationDocumentId
-        ItemModel item = new ItemModel(itemName, itemPrice, itemDescription, imageURL, destinationDocumentId);
+        ItemModel item = new ItemModel(itemName, itemDescription, itemPrice, imageURL, destinationDocumentId);
 
         // Add the item to Firebase Firestore
         firestore.collection("items")
@@ -222,10 +229,28 @@ public class ItemListActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
-                        // Add the item to the item list and update the RecyclerView
-                        addItemToItemList(item);
-                        // Item added to Firestore successfully
-                        Toast.makeText(ItemListActivity.this, "Item added successfully!", Toast.LENGTH_SHORT).show();
+                        // Set the item document ID for the item
+                        String itemDocumentId = documentReference.getId();
+                        item.setItemDocumentId(itemDocumentId); // Set the itemDocumentId
+
+                        // Update the item in Firestore with the correct itemDocumentId
+                        documentReference.update("itemDocumentId", itemDocumentId)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        // Add the item to the item list and update the RecyclerView
+                                        addItemToItemList(item);
+                                        // Item added to Firestore successfully
+                                        Toast.makeText(ItemListActivity.this, "Item added successfully!", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Handle any errors during item addition to Firestore
+                                        Toast.makeText(ItemListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -236,6 +261,8 @@ public class ItemListActivity extends AppCompatActivity {
                     }
                 });
     }
+
+
 
     private void fetchItemData(String destinationDocumentId) {
         itemCollection.whereEqualTo("destinationDocumentId", destinationDocumentId)
@@ -261,7 +288,6 @@ public class ItemListActivity extends AppCompatActivity {
     }
 
 
-
     // Handle the result of image picking
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -276,9 +302,6 @@ public class ItemListActivity extends AppCompatActivity {
             if (imageUri != null) {
                 image.setImageURI(imageUri);
             }
-
-
-
         }
     }
 
@@ -290,6 +313,23 @@ public class ItemListActivity extends AppCompatActivity {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
+
+    @Override
+    public void onItemClick(ItemModel item) {
+        // Create an intent to start the ItemDetailActivity
+        Intent intent = new Intent(ItemListActivity.this, ItemDetailsActivity.class);
+
+        // Pass the item details to the ItemDetailActivity
+        intent.putExtra("itemName", item.getItemName());
+        intent.putExtra("itemPrice", item.getItemPrice());
+        intent.putExtra("itemDescription", item.getItemDescription());
+        intent.putExtra("itemImageURL", item.getItemImage());
+
+        // Start the ItemDetailActivity
+        startActivity(intent);
+    }
+
+
 
 }
 
