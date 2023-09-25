@@ -8,33 +8,6 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
-        android:src="@drawable/emptyimage"
-        android:visibility="gone"/>
-
-    <!-- Add a RecyclerView to display data -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/toolbar"
-        android:visibility="visible" />
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/imageView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="-67dp"
-        android:text="Your travel list is empty"
-        android:textSize="18sp"
-        android:visibility="gone"/>
-
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -45,6 +18,49 @@
         app:titleTextAppearance="@style/ToolbarTitleTextAppearance"
 
         />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="40dp"
+        android:src="@drawable/waiting"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/textViewEL"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imageView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="-220dp"
+        android:text="Your travel list is empty !!!"
+        android:textColor="@color/md_theme_dark_outline"
+        android:textSize="18sp"
+        android:visibility="gone"/>
+
+
+    <TextView
+        android:id="@+id/textViewYD"
+        android:layout_below="@id/toolbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="8dp"
+        android:text="Your Destinations"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@color/md_theme_dark_outline"
+        android:visibility="gone"/>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/textViewYD"
+        android:visibility="gone" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_destination"

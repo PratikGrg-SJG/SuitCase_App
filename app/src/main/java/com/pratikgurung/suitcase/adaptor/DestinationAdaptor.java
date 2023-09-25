@@ -1,5 +1,6 @@
-package com.pratikgurung.suitcase;
+package com.pratikgurung.suitcase.adaptor;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,14 +8,32 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
-import models.DestinationModel;
+
+import com.pratikgurung.suitcase.R;
+import com.pratikgurung.suitcase.models.DestinationModel;
 
 public class DestinationAdaptor extends RecyclerView.Adapter<DestinationAdaptor.ViewHolder> {
     private List<DestinationModel> destinations;
+    private OnDestinationClickListener onDeleteClickListener;
+    private OnDestinationClickListener onUpdateClickListener;
+    private OnDestinationClickListener onItemClickListener;
 
-    public DestinationAdaptor(List<DestinationModel> destinations) {
-        this.destinations = destinations;
+
+    public interface OnDestinationClickListener {
+        void onDeleteClick(int position);
+        void onUpdateClick(int position);
+        void onItemClick(DestinationModel destination);
     }
+
+
+
+    public DestinationAdaptor(List<DestinationModel> destinations, OnDestinationClickListener onDeleteClickListener, OnDestinationClickListener onUpdateClickListener, OnDestinationClickListener onItemClickListener) {
+        this.destinations = destinations;
+        this.onDeleteClickListener = onDeleteClickListener;
+        this.onUpdateClickListener = onUpdateClickListener;
+        this.onItemClickListener = onItemClickListener;
+    }
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView destinationNameTextView;
@@ -28,6 +47,7 @@ public class DestinationAdaptor extends RecyclerView.Adapter<DestinationAdaptor.
             selectedDateTextView = itemView.findViewById(R.id.selectedDateTextView);
         }
     }
+
     // Method to update the adapter with new data
     public void setData(List<DestinationModel> newData) {
         destinations.clear(); // Clear the existing data
@@ -43,13 +63,35 @@ public class DestinationAdaptor extends RecyclerView.Adapter<DestinationAdaptor.
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         DestinationModel destination = destinations.get(position);
         holder.destinationNameTextView.setText(destination.getDestinationName());
         holder.noteTextView.setText(destination.getNotes());
         holder.selectedDateTextView.setText(destination.getSelectedDate());
-    }
 
+        // Set a long click listener to open the update dialog
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (onUpdateClickListener != null) {
+                    onUpdateClickListener.onUpdateClick(position);
+                }
+                return true;
+            }
+        });
+
+        // Set a click listener to navigate to ItemListActivity for the specific destination
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onItemClickListener != null) {
+                    onItemClickListener.onItemClick(destination);
+                }
+            }
+        });
+
+
+    }
 
 
     @Override
