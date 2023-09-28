@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarShare"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        app:title="Share Item"
+        app:titleCentered="true"
+        android:background="@color/md_theme_light_primary"
+        app:titleTextAppearance="@style/ToolbarTitleTextAppearance" />
+
+    <ImageView
+        android:id="@+id/imageItemShare"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:src="@drawable/ic_launcher_foreground"
+        android:contentDescription="Item Image"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:padding="16dp" />
+
+    <TextView
+        android:id="@+id/textItemShare"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Item Name\nPrice: NPR 1000\nItem Description"
+        android:textSize="16sp"
+        android:padding="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonSend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send"
+        android:textSize="18sp"
+        android:layout_margin="16dp"
+
+        android:padding="16dp"
+        android:gravity="center" />
+
+
+</LinearLayout>

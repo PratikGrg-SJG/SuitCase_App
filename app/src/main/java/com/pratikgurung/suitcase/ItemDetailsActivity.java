@@ -14,11 +14,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 import com.google.firebase.database.collection.BuildConfig;
 
 import java.io.File;
@@ -33,6 +35,7 @@ public class ItemDetailsActivity extends AppCompatActivity {
     TextView itemNameView;
     TextView itemPriceView;
     TextView itemDescriptionView;
+    MaterialButton shareButton;
 
 
     @Override
@@ -45,6 +48,7 @@ public class ItemDetailsActivity extends AppCompatActivity {
         itemNameView = findViewById(R.id.textViewItemDetailName);
         itemPriceView = findViewById(R.id.textViewItemDetailPrice);
         itemDescriptionView = findViewById(R.id.textViewItemDetailDescription);
+        shareButton = findViewById(R.id.bottomShareButton);
 
 
         // Retrieve data from intent
@@ -64,7 +68,26 @@ public class ItemDetailsActivity extends AppCompatActivity {
         itemDescriptionView.setText(itemDescription);
         loadItemImage(itemImageURL, itemImageView);
 
+        shareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Create an intent to start the ShareActivity
+                Intent intent = new Intent(ItemDetailsActivity.this, ShareActivity.class);
 
+                // Pass the item image URL and share message as extras to the intent
+                intent.putExtra("itemImageURL", itemImageURL);  // Use the variable directly
+                intent.putExtra("shareMessage", constructShareMessage());
+
+                startActivity(intent);
+            }
+        });
+
+    }
+    private String constructShareMessage() {
+        return "Hi, I'm going to travel, can you help me get this " +
+                itemNameView.getText() +
+                ", it costs around NPR " + itemPriceView.getText() + "." +
+                "\n\nItem Description: \n" + itemDescriptionView.getText();
     }
 
     //inflate menu
