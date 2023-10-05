@@ -464,7 +464,10 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                         adapter.notifyItemChanged(position);  // Notify adapter to redraw the item
                         dialog.dismiss();
                     }
-                });
+                }).setOnCancelListener(dialog -> {
+            // Dialog canceled, notify the adapter to refresh the view
+                    adapter.notifyItemChanged(position);
+        });
         AlertDialog dialog = builder.create();
 
         // Applying a custom rounded background drawable to the dialog's window
@@ -489,13 +492,7 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
         params.height = dialogHeight;
         dialog.getWindow().setAttributes(params);
 
-        // Changing text color of Confirm to be red
-        Button confirmButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-        confirmButton.setTextColor(ContextCompat.getColor(this, R.color.md_theme_light_error));
 
-        // Changing text color of Confirm to be grey
-        Button cancelButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE);
-        cancelButton.setTextColor(ContextCompat.getColor(this, R.color.md_theme_dark_surfaceVariant));
     }
 
     private void deleteDestinationFromDatabase(int position) {
@@ -575,6 +572,15 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                 inputDesName.clearFocus();
                 inputNote.clearFocus();
                 return false;
+            }
+        });
+
+        // Set a cancellation listener
+        bottomSheetDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                // This method will be called when the dialog is canceled
+                adapter.notifyItemChanged(position);
             }
         });
 

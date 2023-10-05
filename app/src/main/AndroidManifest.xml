@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -18,7 +17,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.Light"
         tools:targetApi="31">
-
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -31,6 +29,12 @@
         </provider>
 
         <activity
+            android:name=".OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/OnboardTheme"/>
+
+
+        <activity
             android:name=".ShareActivity"
             android:exported="false"
             android:parentActivityName=".ItemDetailsActivity"
@@ -38,9 +42,7 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ItemDetailsActivity" />
-
         </activity>
-
         <activity
             android:name=".ItemDetailsActivity"
             android:exported="false"
@@ -59,14 +61,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-
         <activity
             android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/OnboardTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

@@ -23,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -115,11 +116,14 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
                 // Not needed for this implementation
+
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 // Not needed for this implementation
+                selectedTabPosition = tab.getPosition();
+                fetchItemData(destinationDocumentId);
             }
         });
 
@@ -146,6 +150,35 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
         itemAdapter = new ItemAdaptor(itemList, this, (ItemAdaptor.OnItemClickListener) this);
         recyclerView.setAdapter(itemAdapter);
 
+        // Create a SimpleCallback for swipe gestures (left and right)
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(
+                0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                ItemModel item = itemList.get(position);
+
+                // Handle swipe left (delete)
+                if (direction == ItemTouchHelper.LEFT) {
+                    deleteItem(item);
+                }
+
+                // Handle swipe right (edit)
+                if (direction == ItemTouchHelper.RIGHT) {
+                    editItem(item);
+                }
+            }
+        };
+
+// Create an ItemTouchHelper and attach it to the RecyclerView
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+
     }
 
     // Method to add an item to the itemList and update the RecyclerView
@@ -155,13 +188,168 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
     }
 
     private void deleteItem(ItemModel item) {
-        // Implement item deletion logic here
-        // You can use item.getItemDocumentId() to identify the item to delete
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
+        builder.setTitle("Delete Item");
+        builder.setMessage("Are you sure you want to delete this item?");
+
+        builder.setPositiveButton("Delete", (dialog, which) -> {
+            // User clicked Delete button
+            deleteItemFromFirestore(item);
+            dialog.dismiss();
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            // User cancelled the deletion
+            itemAdapter.notifyDataSetChanged();
+            dialog.dismiss();
+        }).setOnCancelListener(dialog -> {
+            // Dialog canceled, notify the adapter to refresh the view
+            itemAdapter.notifyDataSetChanged();
+        });;
+        builder.show();
     }
 
+
+    private void deleteItemFromFirestore(ItemModel item) {
+        String itemDocumentId = item.getItemDocumentId();
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        CollectionReference itemsCollection = firestore.collection("items");
+
+        itemsCollection.document(itemDocumentId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    // Item deleted successfully from Firestore
+                    // Now remove it from the local list and notify the adapter
+                    itemList.remove(item);
+                    itemAdapter.notifyDataSetChanged();
+
+                    // Display appropriate message based on the list
+                    updateNoItemsMessage();
+
+                    Toast.makeText(ItemListActivity.this, "Item deleted successfully", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    // Failed to delete item from Firestore
+                    Toast.makeText(ItemListActivity.this, "Failed to delete item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+
     private void editItem(ItemModel item) {
-        // Implement item editing logic here
-        // You can use item.getItemDocumentId() to identify the item to edit
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.item_input, null);
+
+        // Initialize the dialog components
+        image = dialogView.findViewById(R.id.imageViewItem);
+        Button selectImage = dialogView.findViewById(R.id.buttonSelectImage);
+        TextInputLayout itemNameLayout = dialogView.findViewById(R.id.textInputItemName);
+        TextInputEditText itemNameEditText = dialogView.findViewById(R.id.editTextItemName);
+        TextInputLayout itemPriceLayout = dialogView.findViewById(R.id.textInputItemPrice);
+        TextInputEditText itemPriceEditText = dialogView.findViewById(R.id.editTextItemPrice);
+        TextInputLayout itemDescriptionLayout = dialogView.findViewById(R.id.textInputItemDescription);
+        TextInputEditText itemDescriptionEditText = dialogView.findViewById(R.id.editTextItemDescription);
+
+        // Pre-fill the item details
+        itemNameEditText.setText(item.getItemName());
+        itemPriceEditText.setText(item.getItemPrice());
+        itemDescriptionEditText.setText(item.getItemDescription());
+
+        // Load the image if available
+        if (item.getItemImage() != null) {
+            // Load the image using an image loading library like Glide or Picasso
+            // For simplicity, we assume a function loadImageIntoImageView(image, item.getItemImage()) to load the image
+            loadImageIntoImageView(image, item.getItemImage());
+        }
+
+        selectImage.setOnClickListener(v -> {
+            // Open the gallery to pick an image
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            startActivityForResult(intent, PICK_IMAGE_REQUEST);
+        });
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle("Edit Item")
+                .setView(dialogView)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    // Extract edited details from the dialog
+                    String editedItemName = itemNameEditText.getText().toString();
+                    String editedItemPrice = itemPriceEditText.getText().toString();
+                    String editedItemDescription = itemDescriptionEditText.getText().toString();
+
+                    // Update the item details
+                    item.setItemName(editedItemName);
+                    item.setItemPrice(editedItemPrice);
+                    item.setItemDescription(editedItemDescription);
+
+                    // Check if a new image is selected for editing
+                    if (imageUri != null) {
+                        progressDialog.show();
+                        // Upload the edited image to Firebase Storage and update item details
+                        uploadImageAndUpdateItem(item, imageUri);
+                    } else {
+                        // Update item details without changing the image
+                        updateItemInFirestore(item);
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+
+        // Add an OnTouchListener to the parent view of the dialog to hide the keyboard
+        dialogView.setOnTouchListener((v, event) -> {
+            hideKeyboard(ItemListActivity.this, dialogView);
+            itemNameLayout.clearFocus();
+            itemPriceEditText.clearFocus();
+            itemDescriptionEditText.clearFocus();
+            return false;
+        });
+    }
+
+    // Function to update item details and image in Firestore
+    private void uploadImageAndUpdateItem(ItemModel item, Uri imageUri) {
+        StorageReference imageRef = storageRef.child("images/" + item.getItemName() + ".jpg");
+
+        // Upload the image to Firebase Storage
+        imageRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    // Image uploaded successfully, get the download URL
+                    imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                        // Update item details with the new image URL
+                        item.setItemImage(downloadUri.toString());
+                        // Update item details in Firestore
+                        updateItemInFirestore(item);
+                    });
+                })
+                .addOnFailureListener(e -> {
+                    // Handle any errors during the image upload
+                    Toast.makeText(ItemListActivity.this, "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    progressDialog.dismiss();
+                });
+    }
+
+    // Function to load an image into an ImageView using Glide or Picasso
+    private void loadImageIntoImageView(ImageView imageView, String imageUrl) {
+        // Load the image using your preferred image loading library (e.g., Glide, Picasso)
+        // Example using Glide:
+        Glide.with(this).load(imageUrl).into(imageView);
+    }
+
+    // Function to update item details in Firestore
+    private void updateItemInFirestore(ItemModel item) {
+        // Update the item details in Firestore
+        firestore.collection("items")
+                .document(item.getItemDocumentId())
+                .set(item)
+                .addOnSuccessListener(aVoid -> {
+                    // Item details updated successfully
+                    Toast.makeText(ItemListActivity.this, "Item updated successfully!", Toast.LENGTH_SHORT).show();
+                    progressDialog.dismiss();
+                })
+                .addOnFailureListener(e -> {
+                    // Failed to update item details
+                    Toast.makeText(ItemListActivity.this, "Failed to update item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    progressDialog.dismiss();
+                });
     }
 
 
@@ -319,7 +507,6 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
         }
 
         itemCollection.whereEqualTo("destinationDocumentId", destinationDocumentId)
-                .whereEqualTo("purchased", !isToPurchase)
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
@@ -332,15 +519,27 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                             // Convert the Firestore document to an ItemModel object
                             ItemModel item = document.toObject(ItemModel.class);
-                            // Add the item to the item list
-                            addItemToItemList(item);
+
+                            // Check if the item belongs to the selected tab
+                            if (isToPurchase && !item.isPurchased()) {
+                                // For "To Purchase" tab, show only unpurchased items
+                                itemList.add(item);
+                            } else if (!isToPurchase && item.isPurchased()) {
+                                // For "Purchased" tab, show only purchased items
+                                itemList.add(item);
+                            }
                         }
 
                         // Display appropriate message based on the list
                         updateNoItemsMessage();
+
+                        // Notify the adapter that the data has changed
+                        itemAdapter.notifyDataSetChanged();
                     }
                 });
     }
+
+
 
 
     private void updateNoItemsMessage() {

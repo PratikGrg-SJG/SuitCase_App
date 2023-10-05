@@ -1,0 +1,41 @@
+<!-- onboarding_item.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Image -->
+    <ImageView
+        android:id="@+id/imageViewOB"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_marginTop="40dp"
+        android:adjustViewBounds="true"
+        android:layout_gravity="center_horizontal" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="20dp" />
+
+
+    <!-- Text -->
+    <TextView
+        android:id="@+id/textViewOB"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="15dp"
+        android:text="Your text goes here"
+        android:maxLines="3"
+        android:ellipsize="end"
+        android:textSize="44sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:gravity="start"/>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="30dp" />
+
+</LinearLayout>

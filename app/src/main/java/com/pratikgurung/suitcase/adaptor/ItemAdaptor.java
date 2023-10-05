@@ -150,23 +150,20 @@ public class ItemAdaptor extends RecyclerView.Adapter<ItemAdaptor.ItemViewHolder
         itemsCollection.document(documentId)
                 .update("purchased", item.isPurchased())
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("ItemAdaptor", "Document successfully updated!");
-                    // Update the item in the local list
-                    /*itemList.set(position, item);*/
-                    itemList.get(position).setPurchased(item.isPurchased());
-                    // Notify the adapter that the data has changed
-                    notifyDataSetChanged();
+                    // Check if the position is valid before updating the list
+                    if (position >= 0 && position < itemList.size()) {
+                        // Update the item in the local list
+                        itemList.get(position).setPurchased(item.isPurchased());
+                        Log.d("ItemAdaptor", "Document successfully updated!");
+                    } else {
+                        Log.e("ItemAdaptor", "Invalid position: " + position);
+                    }
                 })
                 .addOnFailureListener(e -> {
                     Log.w("ItemAdaptor", "Error updating document", e);
                     // Handle the error
                 });
     }
-
-
-
-
-
 
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {

@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,11 +27,16 @@ import java.lang.reflect.Method;
 
 public class SplashActivity extends AppCompatActivity {
 
+    private SharedPreferences sharedPreferences;
+
     TextView splashText;
         @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+
+        // Initialize SharedPreferences
+        sharedPreferences = getSharedPreferences("onboarding", MODE_PRIVATE);
 
         splashText = findViewById(R.id.splashText);
 
@@ -74,7 +80,14 @@ public class SplashActivity extends AppCompatActivity {
                 fadeOutAnimation.setDuration(600); // Animation duration in milliseconds
                 splashText.startAnimation(fadeOutAnimation);
 
-                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+                Intent intent;
+                if (isOnboardingCompleted()) {
+                    // Onboarding is completed, launch login activity
+                    intent = new Intent(SplashActivity.this, LoginActivity.class);
+                } else {
+                    // Onboarding is not completed, launch onboarding activity
+                    intent = new Intent(SplashActivity.this, OnboardingActivity.class);
+                }
                 startActivity(intent);
                 finish();
             }
@@ -82,4 +95,11 @@ public class SplashActivity extends AppCompatActivity {
 
 
     }
+
+    private boolean isOnboardingCompleted() {
+        // Initialize SharedPreferences properly before using it
+        sharedPreferences = getSharedPreferences("onboarding", MODE_PRIVATE);
+        return sharedPreferences.getBoolean("isCompleted", false);
+    }
+
 }

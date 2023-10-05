@@ -18,21 +18,17 @@
 
         <ImageView
             android:id="@+id/logo"
-            android:layout_width="2000dp"
+            android:layout_width="200dp"
             android:layout_height="200dp"
-            android:layout_marginTop="-50dp"
-            app:srcCompat="@drawable/mainlogo" />
+            app:srcCompat="@drawable/login_logo1" />
 
         <TextView
             android:id="@+id/loginHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
             android:fontFamily="@font/nunitosans"
-            android:paddingTop="20dp"
             android:paddingBottom="20dp"
             android:text="@string/welcome_back"
-
             android:textSize="25sp"
             android:textStyle="bold" />
 

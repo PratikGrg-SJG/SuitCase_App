@@ -30,7 +30,7 @@
             <ImageView
                 android:id="@+id/imageViewItemDetail"
                 android:layout_width="match_parent"
-                android:layout_height="450dp"
+                android:layout_height="400dp"
                 android:adjustViewBounds="true"
                 android:scaleType="centerCrop"
                 android:src="@drawable/placeholder_image" />
@@ -113,8 +113,76 @@
                     android:textStyle="bold"
                     />
             </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottomShareButton"
+        android:orientation="horizontal"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        >
+
+        <!-- Edit item with an icon -->
+        <LinearLayout
+            android:id="@+id/editItemID"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+           >
+
+            <ImageView
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:src="@drawable/ic_edit"
+                android:tint="@color/md_theme_light_primary"
+                android:contentDescription="Edit Icon"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit Item"
+                android:textSize="16sp"
+                />
+
+        </LinearLayout>
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="wrap_content" />
+        <!-- Delete item with an icon -->
+        <LinearLayout
+            android:id="@+id/deleteItemID"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+           >
+
+            <ImageView
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:src="@drawable/ic_delete"
+                android:tint="@color/md_theme_light_error"
+                android:contentDescription="Delete Icon"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delete Item"
+                android:textSize="16sp"
+                 />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/bottomShareButton"

@@ -45,14 +45,14 @@ public class LoginActivity extends AppCompatActivity {
     LinearLayout googleSignInbtn;
     ProgressBar progressBar;
     View dimBackground;
-    FirebaseAuth mAuth;
+    FirebaseAuth mAuth =  FirebaseAuth.getInstance();;
 
     @Override
     public void onStart() {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser != null){
+        if(currentUser != null ){
             /*if user is already signedin then redirecting to mainactivity*/
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
@@ -73,9 +73,6 @@ public class LoginActivity extends AppCompatActivity {
         googleSignInbtn = findViewById(R.id.googleSignInbtn);
         progressBar = findViewById(R.id.loginProgressBar);
         dimBackground = findViewById(R.id.loginDimBackground);
-        mAuth = FirebaseAuth.getInstance(); /*Initialize firebase auth*/
-
-
 
         //login part
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -150,12 +147,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        FirebaseUser firebaseUser = mAuth.getCurrentUser();
-        //check condition
-        if(firebaseUser!= null){
-            //when user is alread signed in redirect to mainactivity
-            startActivity(new Intent(getApplicationContext(), MainActivity.class));
-        }
 
         /*Navigating to Registration Screen when register now is clicked*/
         registerNowTextBtn.setOnClickListener(new View.OnClickListener() {
