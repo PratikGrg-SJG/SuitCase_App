@@ -13,6 +13,10 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -73,8 +77,13 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
     TextView textViewYD;
     DestinationAdaptor adapter;
     List<DestinationModel> destinations; // Updated to store destination data
+    //for shake gesture
+    private static final float SHAKE_THRESHOLD = 15f;
+    private static final int SHAKE_WAIT_TIME_MS = 500;
+    private long lastShakeTime = 0;
 
-    @Override
+
+        @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -99,12 +108,16 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
         // Setting custom toolbar
         setSupportActionBar(toolbar);
 
+
+
+
         // Checking if user exists or not
         if (user == null) {
             Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
             startActivity(intent);
             finish();
         }
+
 
         // Adding new destination using floating action button
         fabAddDestination.setOnClickListener(new View.OnClickListener() {
@@ -136,6 +149,8 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                     }
                 });
 
+                detectShake(); //detect shake
+
                 // Add an OnTouchListener to the parent view of the dialog
                 view.setOnTouchListener(new View.OnTouchListener() {
                     @Override
@@ -156,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                 saveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // Get user input
+                                                // Get user input
                         String destinationName = inputDesName.getText().toString();
                         String note = inputNote.getText().toString();
                         String selectedDate = datePickerView.getText().toString();
@@ -193,6 +208,8 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                 });
 
             }
+
+
         });
 
         // For fetching data from Firebase
@@ -229,20 +246,93 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
             }
         });
 
-        // Set up swipe-to-delete functionality
-        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false;
-            }
+        // Set up swipe gestures to update and delete functionality
+            new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+                private int iconSize;  // Adjusted icon size
 
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                int adapterPosition = viewHolder.getAdapterPosition();
-                onDeleteClick(adapterPosition);
-            }
-        }).attachToRecyclerView(recyclerView);
-    }
+                @Override
+                public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                    return false;
+                }
+
+                @Override
+                public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                    int adapterPosition = viewHolder.getAdapterPosition();
+
+                    if (direction == ItemTouchHelper.LEFT) {
+                        // Delete on swipe left
+                        onDeleteClick(adapterPosition);
+                    } else if (direction == ItemTouchHelper.RIGHT) {
+                        // Update on swipe right
+                        onUpdateClick(adapterPosition);
+                    }
+                }
+
+                @Override
+                public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+
+                    if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                        View itemView = viewHolder.itemView;
+
+                        // Calculate the icon size based on the itemView dimensions
+                        iconSize = (int) (0.7 * itemView.getHeight());
+
+                        Paint paint = new Paint();
+                        if (dX > 0) {
+                            // Swiping right (edit)
+                            paint.setColor(ContextCompat.getColor(MainActivity.this, R.color.teal));
+                            Drawable editIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_edit); // Add your edit icon
+                            // Calculate icon position to keep it centered horizontally
+                            float iconMargin = (itemView.getHeight() - iconSize) / 2.0f;
+                            float iconLeft = itemView.getLeft() + iconMargin;
+                            float iconRight = iconLeft + iconSize;
+
+                            // Draw edit background with rounded corners
+                            RectF background = new RectF(itemView.getLeft(), itemView.getTop(), itemView.getLeft() + dX, itemView.getBottom());
+                            float cornerRadius = 20.0f;  // Adjust the corner radius
+                            c.drawRoundRect(background, cornerRadius, cornerRadius, paint);
+
+                            // Draw edit icon
+                            editIcon.setBounds(
+                                    (int) iconLeft,
+                                    (int) (itemView.getTop() + iconMargin),
+                                    (int) iconRight,
+                                    (int) (itemView.getTop() + iconMargin + iconSize)
+                            );
+                            editIcon.draw(c);
+                        } else {
+                            // Swiping left (delete)
+                            paint.setColor(ContextCompat.getColor(MainActivity.this, R.color.md_theme_dark_errorContainer));
+                            Drawable deleteIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_delete); // Add your delete icon
+                            float iconMargin = (itemView.getHeight() - iconSize) / 2.0f;  // Use the adjusted icon size
+                            float iconTop = itemView.getTop() + (itemView.getHeight() - iconSize) / 2;
+                            float iconBottom = iconTop + iconSize;
+
+
+                            // Draw delete background with rounded corners
+                            RectF background = new RectF(itemView.getRight() + dX, itemView.getTop(), itemView.getRight(), itemView.getBottom());
+                            float cornerRadius = 20.0f;  // Adjust the corner radius
+                            c.drawRoundRect(background, cornerRadius, cornerRadius, paint);
+
+                            // Draw delete icon
+                            deleteIcon.setBounds(
+                                    (int) (itemView.getRight() - iconMargin - iconSize),
+                                    (int) iconTop,
+                                    (int) (itemView.getRight() - iconMargin),
+                                    (int) iconBottom
+                            );
+                            deleteIcon.draw(c);
+                        }
+                    }
+                }
+
+            }).attachToRecyclerView(recyclerView);
+
+
+
+
+        }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -537,6 +627,9 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                 });
     }
 
+
+
+
     @Override
     public void onItemClick(DestinationModel destination) {
 
@@ -552,4 +645,58 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
 
         startActivity(intent);
     }
+
+    //methods for shake gesture
+    private boolean isBottomSheetVisible = false;
+
+    private void detectShake() {
+        long currentTime = System.currentTimeMillis();
+        if ((currentTime - lastShakeTime) > SHAKE_WAIT_TIME_MS) {
+            lastShakeTime = currentTime;
+            if (isBottomSheetVisible) {
+                // Handle shake action here for the bottom sheet
+                clearFieldsWithConfirmation();
+            }
+        }
+    }
+
+    private void clearFieldsWithConfirmation() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Clear Fields")
+                .setMessage("Are you sure you want to clear all fields?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Clear the fields
+                        clearFields();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void clearFields() {
+        TextInputEditText inputDesName = bottomSheetDialog.findViewById(R.id.destinationName);
+        TextInputEditText inputNote = bottomSheetDialog.findViewById(R.id.note);
+        TextView datePickerView = bottomSheetDialog.findViewById(R.id.dptextView);
+
+        if (inputDesName != null) {
+            inputDesName.setText("");
+        }
+        if (inputNote != null) {
+            inputNote.setText("");
+        }
+        if (datePickerView != null) {
+            datePickerView.setText("Pick Date");
+        }
+    }
+
+
 }

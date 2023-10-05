@@ -3,6 +3,7 @@ package com.pratikgurung.suitcase;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,6 +19,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -25,16 +28,22 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.database.annotations.Nullable;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
 import com.pratikgurung.suitcase.adaptor.ItemAdaptor;
 import com.pratikgurung.suitcase.models.ItemModel;
 
@@ -56,8 +65,11 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
     private List<ItemModel> itemList;
     private AlertDialog progressDialog;
     private ImageView image;
-   /* FirebaseFirestore db = FirebaseFirestore.getInstance();
-    CollectionReference itemReference = db.collection("items");*/
+    private LinearLayout noItemsLayout;
+    private TextView noItemsTextView;
+    private TabLayout tabLayout;
+    private int selectedTabPosition = 0; // Default to "To Purchase" tab
+    private ListenerRegistration itemSnapshotListener;
 
 
 
@@ -78,6 +90,9 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
         toolbar = findViewById(R.id.toolbarItems);
         recyclerView = findViewById(R.id.recyclerViewItems);
         floatingActionButton = findViewById(R.id.fabAddItems);
+        tabLayout = findViewById(R.id.tabLayout);
+        noItemsTextView = findViewById(R.id.noItemsTextView);
+
         itemList = new ArrayList<>();
         // Initialize the progressDialog
         progressDialog = new AlertDialog.Builder(this)
@@ -88,6 +103,25 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(destinationName); //setting appbar title text
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);  //enable back arrow button
+
+        // Listen for tab selection changes
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                selectedTabPosition = tab.getPosition();
+                fetchItemData(destinationDocumentId);
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                // Not needed for this implementation
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                // Not needed for this implementation
+            }
+        });
 
         // Initialize Firebase Storage
         storageRef = FirebaseStorage.getInstance().getReference();
@@ -106,16 +140,28 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
         });
 
 
+
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         itemAdapter = new ItemAdaptor(itemList, this, (ItemAdaptor.OnItemClickListener) this);
         recyclerView.setAdapter(itemAdapter);
-    }
 
+    }
 
     // Method to add an item to the itemList and update the RecyclerView
     private void addItemToItemList(ItemModel item) {
         itemList.add(item);
         itemAdapter.notifyDataSetChanged();  // Notify the adapter that the data has changed
+    }
+
+    private void deleteItem(ItemModel item) {
+        // Implement item deletion logic here
+        // You can use item.getItemDocumentId() to identify the item to delete
+    }
+
+    private void editItem(ItemModel item) {
+        // Implement item editing logic here
+        // You can use item.getItemDocumentId() to identify the item to edit
     }
 
 
@@ -265,27 +311,70 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
 
 
     private void fetchItemData(String destinationDocumentId) {
+        boolean isToPurchase = selectedTabPosition == 0;
+
+        // Stop the previous listener if it exists
+        if (itemSnapshotListener != null) {
+            itemSnapshotListener.remove();
+        }
+
         itemCollection.whereEqualTo("destinationDocumentId", destinationDocumentId)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                .whereEqualTo("purchased", !isToPurchase)
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
-                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                    public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.e("ItemListActivity", "Listen failed.", e);
+                            return;
+                        }
+
+                        itemList.clear(); // Clear previous items
                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                             // Convert the Firestore document to an ItemModel object
                             ItemModel item = document.toObject(ItemModel.class);
                             // Add the item to the item list
                             addItemToItemList(item);
                         }
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // Handle failure in fetching item data
-                        Toast.makeText(ItemListActivity.this, "Failed to fetch items: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                        // Display appropriate message based on the list
+                        updateNoItemsMessage();
                     }
                 });
     }
+
+
+    private void updateNoItemsMessage() {
+        boolean isToPurchase = selectedTabPosition == 0;
+
+        if (itemList.isEmpty()) {
+            if (isToPurchase) {
+                noItemsTextView.setText("No items to show, add new");
+                floatingActionButton.setVisibility(View.VISIBLE);  // Make sure FAB is visible for "To Purchase" tab
+            } else {
+                noItemsTextView.setText("No items purchased");
+                floatingActionButton.setVisibility(View.GONE);
+            }
+            // Display the message
+            noItemsTextView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            // Hide the message and show the RecyclerView if there are items
+            noItemsTextView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+
+            if (isToPurchase) {
+                floatingActionButton.setVisibility(View.VISIBLE);  // Set FAB to visible for "To Purchase" tab
+            } else {
+                floatingActionButton.setVisibility(View.GONE);  // Hide FAB for "Purchased" tab
+            }
+        }
+    }
+
+
+
+
+
+
 
 
     // Handle the result of image picking

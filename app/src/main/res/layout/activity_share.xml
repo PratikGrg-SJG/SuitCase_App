@@ -14,6 +14,40 @@
         android:background="@color/md_theme_light_primary"
         app:titleTextAppearance="@style/ToolbarTitleTextAppearance" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_margin="16dp"
+        android:padding="16dp"
+        android:background="@drawable/border_background">
+
+        <ImageView
+            android:id="@+id/contactLogo"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/address_book"
+        android:contentDescription="Contact Logo"
+           />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="8dp"/>
+
+        <TextView
+            android:id="@+id/contactDetail"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="16dp"
+            android:text="Select Contact"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+
+            android:textSize="16sp" />
+    </LinearLayout>
+
     <ImageView
         android:id="@+id/imageItemShare"
         android:layout_width="match_parent"

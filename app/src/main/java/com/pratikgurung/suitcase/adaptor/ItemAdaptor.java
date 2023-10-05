@@ -152,14 +152,17 @@ public class ItemAdaptor extends RecyclerView.Adapter<ItemAdaptor.ItemViewHolder
                 .addOnSuccessListener(aVoid -> {
                     Log.d("ItemAdaptor", "Document successfully updated!");
                     // Update the item in the local list
-                    itemList.set(position, item);
-                    notifyItemChanged(position);
+                    /*itemList.set(position, item);*/
+                    itemList.get(position).setPurchased(item.isPurchased());
+                    // Notify the adapter that the data has changed
+                    notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> {
                     Log.w("ItemAdaptor", "Error updating document", e);
                     // Handle the error
                 });
     }
+
 
 
 
