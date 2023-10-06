@@ -8,8 +8,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -56,7 +61,6 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
     MaterialToolbar toolbar;
     RecyclerView recyclerView;
     FloatingActionButton floatingActionButton;
-
     private static final int PICK_IMAGE_REQUEST = 1;
     private StorageReference storageRef;
     private FirebaseFirestore firestore;
@@ -71,8 +75,13 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
     private TabLayout tabLayout;
     private int selectedTabPosition = 0; // Default to "To Purchase" tab
     private ListenerRegistration itemSnapshotListener;
-
-
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private float acceleration;
+    private float currentAcceleration;
+    private float lastAcceleration;
+    private Dialog editDialog;
+    private boolean dialogShown = false;  // Flag to track if dialog has been shown for shake gesture
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +125,6 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
                 // Not needed for this implementation
-
             }
 
             @Override
@@ -142,9 +150,6 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
                 showItemInputDialog(destinationDocumentId);
             }
         });
-
-
-
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         itemAdapter = new ItemAdaptor(itemList, this, (ItemAdaptor.OnItemClickListener) this);
@@ -179,14 +184,87 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
+        //for shake gesture
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        acceleration = 10f;  // You can adjust the sensitivity as needed
+        currentAcceleration = SensorManager.GRAVITY_EARTH;
+        lastAcceleration = SensorManager.GRAVITY_EARTH;
+
     }
 
-    // Method to add an item to the itemList and update the RecyclerView
-    private void addItemToItemList(ItemModel item) {
-        itemList.add(item);
-        itemAdapter.notifyDataSetChanged();  // Notify the adapter that the data has changed
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(sensorListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(sensorListener);
+    }
+
+    private final SensorEventListener sensorListener = new SensorEventListener() {
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            // Not needed for this example
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if (editDialog != null && editDialog.isShowing()) {
+                if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                    // Capture accelerometer data
+                    float x = event.values[0];
+                    float y = event.values[1];
+                    float z = event.values[2];
+
+                    lastAcceleration = currentAcceleration;
+                    currentAcceleration = (float) Math.sqrt(x * x + y * y + z * z);
+                    float delta = currentAcceleration - lastAcceleration;
+                    acceleration = acceleration * 0.9f + delta;
+
+                    // If the acceleration is above a certain threshold (shake detected), clear text fields
+                    if (acceleration > 15) {
+                        // Shake detected, clear text fields
+                        clearTextFields();
+                    }
+                }
+            }
+        }
+    };
+
+    private void clearTextFields() {
+        if (!dialogShown) {
+            dialogShown = true;  // Set the flag to true to indicate the dialog has been shown
+
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Confirm Clear")
+                    .setMessage("Are you sure you want to clear the text fields?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        if (editDialog != null) {
+                            // Initialize input fields with the fetched item details from the dialog
+                            TextInputEditText itemNameEditText = editDialog.findViewById(R.id.editTextItemName);
+                            TextInputEditText itemPriceEditText = editDialog.findViewById(R.id.editTextItemPrice);
+                            TextInputEditText itemDescriptionEditText = editDialog.findViewById(R.id.editTextItemDescription);
+
+                            if (itemNameEditText != null && itemPriceEditText != null && itemDescriptionEditText != null) {
+                                itemNameEditText.setText("");
+                                itemPriceEditText.setText("");
+                                itemDescriptionEditText.setText("");
+                            }
+                        }
+
+                        dialogShown = false;  // Reset the flag when dialog is dismissed
+                    })
+                    .setOnDismissListener(dialogInterface -> dialogShown = false)  // Reset the flag when dialog is dismissed
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        dialogShown = false;  // Reset the flag if user cancels
+                    })
+                    .show();
+        }
+    }
     private void deleteItem(ItemModel item) {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle("Delete Item");
@@ -289,11 +367,14 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
                         // Update item details without changing the image
                         updateItemInFirestore(item);
                     }
+                    itemAdapter.notifyDataSetChanged();
                 })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    itemAdapter.notifyDataSetChanged();
+                    dialog.dismiss();}).setOnCancelListener(dialog -> itemAdapter.notifyDataSetChanged());
 
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+        editDialog = builder.create();
+        editDialog.show();
 
         // Add an OnTouchListener to the parent view of the dialog to hide the keyboard
         dialogView.setOnTouchListener((v, event) -> {
@@ -329,8 +410,6 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
 
     // Function to load an image into an ImageView using Glide or Picasso
     private void loadImageIntoImageView(ImageView imageView, String imageUrl) {
-        // Load the image using your preferred image loading library (e.g., Glide, Picasso)
-        // Example using Glide:
         Glide.with(this).load(imageUrl).into(imageView);
     }
 
@@ -351,8 +430,6 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
                     progressDialog.dismiss();
                 });
     }
-
-
 
     private void showItemInputDialog(String destinationDocumentId) {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.item_input, null);
@@ -424,7 +501,6 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
     private void uploadImageToFirebaseStorage(Uri imageUri, String itemName, String itemPrice, String itemDescription, String destinationDocumentId) {
         // Create a storage reference for the image
         StorageReference imageRef = storageRef.child("images/" + itemName + ".jpg");
-
         // Upload the image to Firebase Storage
         imageRef.putFile(imageUri)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -434,6 +510,7 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
                         imageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri downloadUri) {
+
                                 // Save item details to Firebase Firestore
                                 saveItemToFirestore(itemName, itemPrice, itemDescription, downloadUri.toString(), destinationDocumentId);
                                 progressDialog.dismiss();
@@ -473,7 +550,7 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
                                     @Override
                                     public void onSuccess(Void aVoid) {
                                         // Add the item to the item list and update the RecyclerView
-                                        addItemToItemList(item);
+                                        itemAdapter.notifyDataSetChanged();
                                         // Item added to Firestore successfully
                                         Toast.makeText(ItemListActivity.this, "Item added successfully!", Toast.LENGTH_SHORT).show();
                                     }
@@ -521,12 +598,14 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
                             ItemModel item = document.toObject(ItemModel.class);
 
                             // Check if the item belongs to the selected tab
-                            if (isToPurchase && !item.isPurchased()) {
+                            if (isToPurchase && !item.isPurchased() && !itemList.contains(item)) {
                                 // For "To Purchase" tab, show only unpurchased items
                                 itemList.add(item);
+
                             } else if (!isToPurchase && item.isPurchased()) {
                                 // For "Purchased" tab, show only purchased items
                                 itemList.add(item);
+
                             }
                         }
 
@@ -569,13 +648,6 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
         }
     }
 
-
-
-
-
-
-
-
     // Handle the result of image picking
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -584,15 +656,12 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
 
             // Save the image URI for later use to upload in firebase
             this.imageUri = data.getData();
-
-
             // Set the selected image to the ImageView
             if (imageUri != null) {
                 image.setImageURI(imageUri);
             }
         }
     }
-
 
     // Defining method to unfocus on the bottom sheet
     public static void hideKeyboard(Activity activity, View view) {
@@ -608,16 +677,11 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
         Intent intent = new Intent(ItemListActivity.this, ItemDetailsActivity.class);
 
         // Pass the item details to the ItemDetailActivity
-        intent.putExtra("itemName", item.getItemName());
-        intent.putExtra("itemPrice", item.getItemPrice());
-        intent.putExtra("itemDescription", item.getItemDescription());
-        intent.putExtra("itemImageURL", item.getItemImage());
+        intent.putExtra("itemDocumentId", item.getItemDocumentId());
 
         // Start the ItemDetailActivity
         startActivity(intent);
     }
-
-
 
 }
 

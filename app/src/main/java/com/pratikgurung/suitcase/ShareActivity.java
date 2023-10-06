@@ -20,6 +20,7 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +44,7 @@ public class ShareActivity extends AppCompatActivity {
     ImageView imageView;
     TextView textView;
     MaterialButton sendButton;
+    LinearLayout shareViaButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +57,7 @@ public class ShareActivity extends AppCompatActivity {
         imageView = findViewById(R.id.imageItemShare);
         textView = findViewById(R.id.textItemShare);
         sendButton = findViewById(R.id.buttonSend);
+        shareViaButton = findViewById(R.id.shareVia);
 
         // Set the custom toolbar as the support action bar
         setSupportActionBar(toolbar);
@@ -99,6 +102,13 @@ public class ShareActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(ShareActivity.this, "Please select a contact", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        shareViaButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                shareItem();
             }
         });
 
@@ -254,7 +264,7 @@ public class ShareActivity extends AppCompatActivity {
 
     private void shareItem() {
         // Construct the share message with the desired format
-        String shareMessage = textView.toString();
+        String shareMessage = textView.getText().toString();
 
         // Save the image to the app's files directory
         BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();

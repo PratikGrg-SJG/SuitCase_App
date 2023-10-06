@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,6 +18,10 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -40,6 +45,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
@@ -77,13 +83,20 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
     TextView textViewYD;
     DestinationAdaptor adapter;
     List<DestinationModel> destinations; // Updated to store destination data
+
     //for shake gesture
-    private static final float SHAKE_THRESHOLD = 15f;
-    private static final int SHAKE_WAIT_TIME_MS = 500;
-    private long lastShakeTime = 0;
+    private boolean isBottomSheetVisible = false;
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private float acceleration;
+    private float currentAcceleration;
+    private float lastAcceleration;
+    private BottomSheetDialog editBottomSheetDialog;
 
 
-        @Override
+
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -149,7 +162,6 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                     }
                 });
 
-                detectShake(); //detect shake
 
                 // Add an OnTouchListener to the parent view of the dialog
                 view.setOnTouchListener(new View.OnTouchListener() {
@@ -171,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                 saveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                                                // Get user input
+                        // Get user input
                         String destinationName = inputDesName.getText().toString();
                         String note = inputNote.getText().toString();
                         String selectedDate = datePickerView.getText().toString();
@@ -247,96 +259,183 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
         });
 
         // Set up swipe gestures to update and delete functionality
-            new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-                private int iconSize;  // Adjusted icon size
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            private int iconSize;  // Adjusted icon size
 
-                @Override
-                public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                    return false;
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int adapterPosition = viewHolder.getAdapterPosition();
+
+                if (direction == ItemTouchHelper.LEFT) {
+                    // Delete on swipe left
+                    onDeleteClick(adapterPosition);
+                } else if (direction == ItemTouchHelper.RIGHT) {
+                    // Update on swipe right
+                    onUpdateClick(adapterPosition);
                 }
+            }
 
-                @Override
-                public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                    int adapterPosition = viewHolder.getAdapterPosition();
+            @Override
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 
-                    if (direction == ItemTouchHelper.LEFT) {
-                        // Delete on swipe left
-                        onDeleteClick(adapterPosition);
-                    } else if (direction == ItemTouchHelper.RIGHT) {
-                        // Update on swipe right
-                        onUpdateClick(adapterPosition);
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    View itemView = viewHolder.itemView;
+
+                    // Calculate the icon size based on the itemView dimensions
+                    iconSize = (int) (0.7 * itemView.getHeight());
+
+                    Paint paint = new Paint();
+                    if (dX > 0) {
+                        // Swiping right (edit)
+                        paint.setColor(ContextCompat.getColor(MainActivity.this, R.color.teal));
+                        Drawable editIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_edit); // Add your edit icon
+                        // Calculate icon position to keep it centered horizontally
+                        float iconMargin = (itemView.getHeight() - iconSize) / 2.0f;
+                        float iconLeft = itemView.getLeft() + iconMargin;
+                        float iconRight = iconLeft + iconSize;
+
+                        // Draw edit background with rounded corners
+                        RectF background = new RectF(itemView.getLeft(), itemView.getTop(), itemView.getLeft() + dX, itemView.getBottom());
+                        float cornerRadius = 20.0f;  // Adjust the corner radius
+                        c.drawRoundRect(background, cornerRadius, cornerRadius, paint);
+
+                        // Draw edit icon
+                        editIcon.setBounds(
+                                (int) iconLeft,
+                                (int) (itemView.getTop() + iconMargin),
+                                (int) iconRight,
+                                (int) (itemView.getTop() + iconMargin + iconSize)
+                        );
+                        editIcon.draw(c);
+                    } else {
+                        // Swiping left (delete)
+                        paint.setColor(ContextCompat.getColor(MainActivity.this, R.color.md_theme_dark_errorContainer));
+                        Drawable deleteIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_delete); // Add your delete icon
+                        float iconMargin = (itemView.getHeight() - iconSize) / 2.0f;  // Use the adjusted icon size
+                        float iconTop = itemView.getTop() + (itemView.getHeight() - iconSize) / 2;
+                        float iconBottom = iconTop + iconSize;
+
+
+                        // Draw delete background with rounded corners
+                        RectF background = new RectF(itemView.getRight() + dX, itemView.getTop(), itemView.getRight(), itemView.getBottom());
+                        float cornerRadius = 20.0f;  // Adjust the corner radius
+                        c.drawRoundRect(background, cornerRadius, cornerRadius, paint);
+
+                        // Draw delete icon
+                        deleteIcon.setBounds(
+                                (int) (itemView.getRight() - iconMargin - iconSize),
+                                (int) iconTop,
+                                (int) (itemView.getRight() - iconMargin),
+                                (int) iconBottom
+                        );
+                        deleteIcon.draw(c);
                     }
                 }
+            }
 
-                @Override
-                public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+        }).attachToRecyclerView(recyclerView);
 
-                    if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                        View itemView = viewHolder.itemView;
-
-                        // Calculate the icon size based on the itemView dimensions
-                        iconSize = (int) (0.7 * itemView.getHeight());
-
-                        Paint paint = new Paint();
-                        if (dX > 0) {
-                            // Swiping right (edit)
-                            paint.setColor(ContextCompat.getColor(MainActivity.this, R.color.teal));
-                            Drawable editIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_edit); // Add your edit icon
-                            // Calculate icon position to keep it centered horizontally
-                            float iconMargin = (itemView.getHeight() - iconSize) / 2.0f;
-                            float iconLeft = itemView.getLeft() + iconMargin;
-                            float iconRight = iconLeft + iconSize;
-
-                            // Draw edit background with rounded corners
-                            RectF background = new RectF(itemView.getLeft(), itemView.getTop(), itemView.getLeft() + dX, itemView.getBottom());
-                            float cornerRadius = 20.0f;  // Adjust the corner radius
-                            c.drawRoundRect(background, cornerRadius, cornerRadius, paint);
-
-                            // Draw edit icon
-                            editIcon.setBounds(
-                                    (int) iconLeft,
-                                    (int) (itemView.getTop() + iconMargin),
-                                    (int) iconRight,
-                                    (int) (itemView.getTop() + iconMargin + iconSize)
-                            );
-                            editIcon.draw(c);
-                        } else {
-                            // Swiping left (delete)
-                            paint.setColor(ContextCompat.getColor(MainActivity.this, R.color.md_theme_dark_errorContainer));
-                            Drawable deleteIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_delete); // Add your delete icon
-                            float iconMargin = (itemView.getHeight() - iconSize) / 2.0f;  // Use the adjusted icon size
-                            float iconTop = itemView.getTop() + (itemView.getHeight() - iconSize) / 2;
-                            float iconBottom = iconTop + iconSize;
+        //for shake gesture
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        acceleration = 10f;  // You can adjust the sensitivity as needed
+        currentAcceleration = SensorManager.GRAVITY_EARTH;
+        lastAcceleration = SensorManager.GRAVITY_EARTH;
 
 
-                            // Draw delete background with rounded corners
-                            RectF background = new RectF(itemView.getRight() + dX, itemView.getTop(), itemView.getRight(), itemView.getBottom());
-                            float cornerRadius = 20.0f;  // Adjust the corner radius
-                            c.drawRoundRect(background, cornerRadius, cornerRadius, paint);
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(sensorListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
 
-                            // Draw delete icon
-                            deleteIcon.setBounds(
-                                    (int) (itemView.getRight() - iconMargin - iconSize),
-                                    (int) iconTop,
-                                    (int) (itemView.getRight() - iconMargin),
-                                    (int) iconBottom
-                            );
-                            deleteIcon.draw(c);
-                        }
-                    }
-                }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(sensorListener);
+    }
 
-            }).attachToRecyclerView(recyclerView);
-
-
-
-
+    private final SensorEventListener sensorListener = new SensorEventListener() {
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            // Not needed for this example
         }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if (editBottomSheetDialog != null && editBottomSheetDialog.isShowing()) {
+                if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                    // Capture accelerometer data
+                    float x = event.values[0];
+                    float y = event.values[1];
+                    float z = event.values[2];
+
+                    lastAcceleration = currentAcceleration;
+                    currentAcceleration = (float) Math.sqrt(x * x + y * y + z * z);
+                    float delta = currentAcceleration - lastAcceleration;
+                    acceleration = acceleration * 0.9f + delta;
+
+                    // If the acceleration is above a certain threshold (shake detected), clear text fields
+                    if (acceleration > 15) {
+                        // Shake detected, clear text fields
+                        clearTextFields();
+                    }
+                }
+            }
+        }
+    };
+
+    private void clearTextFields() {
+        if (!isBottomSheetVisible) {
+            isBottomSheetVisible = true;  // Set the flag to true to indicate the dialog has been shown
+
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Confirm Clear")
+                    .setMessage("Are you sure you want to clear the text fields?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        if (editBottomSheetDialog != null) {
+                            // Initialize input fields with the fetched item details from the dialog
+                            TextInputEditText inputDesName = editBottomSheetDialog.findViewById(R.id.destinationName);
+                            TextInputEditText inputNote = editBottomSheetDialog.findViewById(R.id.note);
+                            TextView datePickerView = editBottomSheetDialog.findViewById(R.id.dptextView);
+
+                            if (inputDesName != null && inputNote != null && datePickerView != null) {
+                                inputDesName.setText("");
+                                inputNote.setText("");
+                                datePickerView.setText("Pick Date");
+                            }
+                        }
+
+                        isBottomSheetVisible = false;  // Reset the flag when dialog is dismissed
+                    })
+                    .setOnDismissListener(dialogInterface -> isBottomSheetVisible = false)  // Reset the flag when dialog is dismissed
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        isBottomSheetVisible = false;  // Reset the flag if user cancels
+                    })
+                    .show();
+        }
+    }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_items, menu);
+
+        if(user != null){
+            MenuItem userEmailItem = menu.findItem(R.id.user_email);
+            if(userEmailItem != null){
+                String email = user.getEmail();
+                userEmailItem.setTitle(email);
+            }
+        }
         return true;
     }
 
@@ -344,17 +443,7 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.navigation_home) {
-            // Handle Settings option click
-            return true;
-        } else if (id == R.id.navigation_dashboard) {
-            // Handle About option click
-            return true;
-        } else if (id == R.id.navigation_notifications) {
-            // Handle Exit option click
-            // Implement your exit logic here
-            return true;
-        } else if (id == R.id.navigation_logout) {
+        if (id == R.id.navigation_logout) {
             showLogoutConfirmationDialog();
             return true;
         }
@@ -465,9 +554,9 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
                         dialog.dismiss();
                     }
                 }).setOnCancelListener(dialog -> {
-            // Dialog canceled, notify the adapter to refresh the view
+                    // Dialog canceled, notify the adapter to refresh the view
                     adapter.notifyItemChanged(position);
-        });
+                });
         AlertDialog dialog = builder.create();
 
         // Applying a custom rounded background drawable to the dialog's window
@@ -528,77 +617,98 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
 
     private void showUpdateDialog(DestinationModel destination, int position, String userId) {
         View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.bottom_sheet_dialog, (LinearLayout) findViewById(R.id.bottomSheet));
-        bottomSheetDialog = new BottomSheetDialog(MainActivity.this);
-        bottomSheetDialog.setContentView(view);
-        bottomSheetDialog.show();
+        // Ensure that the BottomSheetDialog is properly initialized
+        if (editBottomSheetDialog == null) {
+            editBottomSheetDialog = new BottomSheetDialog(MainActivity.this);
+            editBottomSheetDialog.setContentView(view);
+        }
 
-        // Modify the dialog to allow updating the data
-        TextInputEditText inputDesName = view.findViewById(R.id.destinationName);
-        TextInputEditText inputNote = view.findViewById(R.id.note);
-        ImageView datePickerButton = view.findViewById(R.id.datePicker);
-        TextView datePickerView = view.findViewById(R.id.dptextView);
+        if(editBottomSheetDialog != null){
+            // Modify the dialog to allow updating the data
+            TextInputEditText inputDesName = view.findViewById(R.id.destinationName);
+            TextInputEditText inputNote = view.findViewById(R.id.note);
+            ImageView datePickerButton = view.findViewById(R.id.datePicker);
+            TextView datePickerView = view.findViewById(R.id.dptextView);
 
-        // Set the existing data in the dialog
-        inputDesName.setText(destination.getDestinationName());
-        inputNote.setText(destination.getNotes());
-        datePickerView.setText(destination.getSelectedDate());
+            // Set the existing data in the dialog
+            inputDesName.setText(destination.getDestinationName());
+            inputNote.setText(destination.getNotes());
+            datePickerView.setText(destination.getSelectedDate());
 
-        // Update button for updating the destination
-        Button updateButton = view.findViewById(R.id.save_destination_btn);
-        updateButton.setText("Update");
+            // Update button for updating the destination
+            Button updateButton = view.findViewById(R.id.save_destination_btn);
+            updateButton.setText("Update");
 
-        datePickerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MaterialDatePicker<Long> materialDatePicker = MaterialDatePicker.Builder.datePicker().setTitleText("Select Date").setSelection(MaterialDatePicker.todayInUtcMilliseconds()).build();
-                materialDatePicker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Long>() {
-                    @Override
-                    public void onPositiveButtonClick(Long selection) {
-                        String date = new SimpleDateFormat("E, dd MMM, yyyy", Locale.getDefault()).format(new Date(selection));
-                        datePickerView.setText(MessageFormat.format("{0}", date));
-                    }
-                });
-                materialDatePicker.show(getSupportFragmentManager(), "tag");
-            }
-        });
+            datePickerButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    MaterialDatePicker<Long> materialDatePicker = MaterialDatePicker.Builder.datePicker().setTitleText("Select Date").setSelection(MaterialDatePicker.todayInUtcMilliseconds()).build();
+                    materialDatePicker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Long>() {
+                        @Override
+                        public void onPositiveButtonClick(Long selection) {
+                            String date = new SimpleDateFormat("E, dd MMM, yyyy", Locale.getDefault()).format(new Date(selection));
+                            datePickerView.setText(MessageFormat.format("{0}", date));
+                        }
+                    });
+                    materialDatePicker.show(getSupportFragmentManager(), "tag");
+                }
+            });
 
-        // Add an OnTouchListener to the parent view of the dialog
-        view.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                // Hide the keyboard
-                hideKeyboard(MainActivity.this, view);
-                // Clear focus from TextInputEditText fields
-                inputDesName.clearFocus();
-                inputNote.clearFocus();
-                return false;
-            }
-        });
+            // Add an OnTouchListener to the parent view of the dialog
+            view.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    // Hide the keyboard
+                    hideKeyboard(MainActivity.this, view);
+                    // Clear focus from TextInputEditText fields
+                    inputDesName.clearFocus();
+                    inputNote.clearFocus();
+                    return false;
+                }
+            });
 
-        // Set a cancellation listener
-        bottomSheetDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                // This method will be called when the dialog is canceled
-                adapter.notifyItemChanged(position);
-            }
-        });
+            // Set a cancellation listener
+            editBottomSheetDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    // This method will be called when the dialog is canceled
+                    adapter.notifyItemChanged(position);
+                }
+            });
 
-        // Inside the updateButton click listener
-        updateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Get updated user input
-                String updatedDestinationName = inputDesName.getText().toString();
-                String updatedNote = inputNote.getText().toString();
-                String updatedSelectedDate = datePickerView.getText().toString();
+            // Inside the updateButton click listener
+            updateButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Get updated user input
+                    String updatedDestinationName = inputDesName.getText().toString();
+                    String updatedNote = inputNote.getText().toString();
+                    String updatedSelectedDate = datePickerView.getText().toString();
 
-                bottomSheetDialog.dismiss(); // Close the bottom sheet
+                    bottomSheetDialog.dismiss(); // Close the bottom sheet
 
-                // Update the destination document in the database
-                updateDestinationInDatabase(destination, updatedDestinationName, updatedNote, updatedSelectedDate, position, userId);
-            }
-        });
+                    // Update the destination document in the database
+                    updateDestinationInDatabase(destination, updatedDestinationName, updatedNote, updatedSelectedDate, position, userId);
+                }
+            });
+            editBottomSheetDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    // This method will be called when the dialog is canceled
+                    adapter.notifyItemChanged(position);
+                }
+            });
+
+            editBottomSheetDialog.show();
+        }else{
+            Log.d("EditBottomSheet", "Error");
+        }
+
+
+
+
+
+
     }
 
     private void updateDestinationInDatabase(DestinationModel destination, String updatedDestinationName, String updatedNote, String updatedSelectedDate, int position, String userId) {
@@ -652,19 +762,8 @@ public class MainActivity extends AppCompatActivity implements DestinationAdapto
         startActivity(intent);
     }
 
-    //methods for shake gesture
-    private boolean isBottomSheetVisible = false;
 
-    private void detectShake() {
-        long currentTime = System.currentTimeMillis();
-        if ((currentTime - lastShakeTime) > SHAKE_WAIT_TIME_MS) {
-            lastShakeTime = currentTime;
-            if (isBottomSheetVisible) {
-                // Handle shake action here for the bottom sheet
-                clearFieldsWithConfirmation();
-            }
-        }
-    }
+
 
     private void clearFieldsWithConfirmation() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
