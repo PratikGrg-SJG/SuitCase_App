@@ -11,6 +11,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -82,6 +83,10 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
     private float lastAcceleration;
     private Dialog editDialog;
     private boolean dialogShown = false;  // Flag to track if dialog has been shown for shake gesture
+    private String destinationDocumentId, destinationName;
+    private static final String PREFS_NAME = "MyPrefs";
+    private static final String PREF_ITEM_DOCUMENT_ID = "destinationDocId";
+    private static final String PREF_ITEM_DOCUMENT_NAME = "destinationName";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,8 +95,18 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
 
         // Retrieve destination name and documentId
         Intent intent = getIntent();
-        String destinationName = intent.getStringExtra("destinationName");
-        String destinationDocumentId = intent.getStringExtra("documentId");
+        destinationName = intent.getStringExtra("destinationName");
+        destinationDocumentId = intent.getStringExtra("documentId");
+
+        if (destinationDocumentId == null || destinationDocumentId.isEmpty()) {
+            destinationDocumentId = getSavedDestinationDocumentId();
+        }
+        if (destinationName == null || destinationName.isEmpty()) {
+            destinationName = getSavedDestinationDocumentName();
+        }
+
+        saveDestinationDocumentId(destinationDocumentId);
+        saveDestinationDocumentName(destinationName);
 
         // Log the values
         Log.d("ItemListActivity", "Destination Name: " + destinationName);
@@ -265,6 +280,30 @@ public class ItemListActivity extends AppCompatActivity implements ItemAdaptor.O
                     .show();
         }
     }
+
+    private void saveDestinationDocumentId(String destinationDocumentId) {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(PREF_ITEM_DOCUMENT_ID, destinationDocumentId);
+        editor.apply();
+    }
+    private void saveDestinationDocumentName(String destinationName) {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(PREF_ITEM_DOCUMENT_NAME, destinationName);
+        editor.apply();
+    }
+
+    // Method to retrieve from SharedPreferences
+    private String getSavedDestinationDocumentId() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return sharedPreferences.getString(PREF_ITEM_DOCUMENT_ID, "");
+    }
+    private String getSavedDestinationDocumentName() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return sharedPreferences.getString(PREF_ITEM_DOCUMENT_NAME, "");
+    }
+
     private void deleteItem(ItemModel item) {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle("Delete Item");

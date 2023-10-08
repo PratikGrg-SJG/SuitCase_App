@@ -9,6 +9,7 @@ import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -65,11 +66,9 @@ public class ItemDetailsActivity extends AppCompatActivity {
     private float lastAcceleration;
     private Dialog editDialog;
     private boolean dialogShown = false;  // Flag to track if dialog has been shown for shake gesture
-
-
-
-
-
+    //for documentid using sharedpreference
+    private static final String PREFS_NAME = "MyPrefs";
+    private static final String PREF_ITEM_DOCUMENT_ID = "itemDocumentId";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,16 +87,22 @@ public class ItemDetailsActivity extends AppCompatActivity {
         deleteItemID = findViewById(R.id.deleteItemID);
         shareButton = findViewById(R.id.bottomShareButton);
 
-
         // Retrieve data from intent
         Intent intent = getIntent();
-         itemDocumentIdP = intent.getStringExtra("itemDocumentId");
+        itemDocumentIdP = intent.getStringExtra("itemDocumentId");
 
+        // If itemDocumentId is null or empty, try to retrieve the latest saved item ID
+        if (itemDocumentIdP == null || itemDocumentIdP.isEmpty()) {
+            itemDocumentIdP = getSavedItemDocumentId();
+        }
+
+        // Save the latest item ID in SharedPreferences
+        saveItemDocumentId(itemDocumentIdP);
+
+        fetchItemDetails(itemDocumentIdP);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Item Details"); //setting appbar title text
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);  //enable back arrow button
-
-        fetchItemDetails(itemDocumentIdP);
 
         //for shake gesture
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -211,11 +216,19 @@ public class ItemDetailsActivity extends AppCompatActivity {
         }
     }
 
+    // Method to save itemDocumentId to SharedPreferences
+    private void saveItemDocumentId(String itemDocumentId) {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(PREF_ITEM_DOCUMENT_ID, itemDocumentId);
+        editor.apply();
+    }
 
-
-
-
-
+    // Method to retrieve itemDocumentId from SharedPreferences
+    private String getSavedItemDocumentId() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return sharedPreferences.getString(PREF_ITEM_DOCUMENT_ID, "");
+    }
 
     private String constructShareMessage() {
         return "Hi, I'm going to travel, can you help me get this " +
